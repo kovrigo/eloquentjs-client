@@ -1,0 +1,30 @@
+{
+  "name": "laravel-eloquentjs",
+  "version": "1.0.0-beta.0",
+  "description": "Javascript implementation of Laravel's Eloquent API",
+  "main": "index.js",
+  "scripts": {
+    "prebuild": "rm -rf dist && mkdir dist",
+    "build": "babel src/index.js -o dist/index.js",
+    "test": "mocha test/index.js -w --compilers js:babel/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/parsnick/laravel-eloquentjs.git"
+  },
+  "keywords": [
+    "laravel",
+    "eloquent"
+  ],
+  "author": "Nick",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/parsnick/laravel-eloquentjs/issues"
+  },
+  "homepage": "https://github.com/parsnick/laravel-eloquentjs#readme",
+  "devDependencies": {
+    "babel": "^5.8.23",
+    "chai": "^3.3.0",
+    "mocha": "^2.3.3"
+  }
+}
