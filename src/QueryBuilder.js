@@ -9,58 +9,80 @@
  */
 export default class QueryBuilder {
 
-    constructor() {
-        this.stack = [];
+    constructor(transport) {
+        this.transport = transport;
+        this.stack     = [];
+        this.endpoint  = null;
     }
 
-    _stack(name, args) {
+    _call(name, args) {
         this.stack.push([name, args]);
         return this;
     }
 
-    select(...columns) { return this._stack('select', columns); }
-    addSelect(...columns) { return this._stack('addSelect', columns); }
+    from(endpoint) {
+        this.endpoint = endpoint;
+        return this;
+    }
 
-    distinct(...args) { return this._stack('distinct', args); }
-    from(...args) { return this._stack('from', args); }
+    select(...columns) { return this._call('select', columns); }
+    addSelect(...columns) { return this._call('addSelect', columns); }
 
-    where(...args) { return this._stack('where', args); }
-    orWhere(...args) { return this._stack('orWhere', args); }
-    orWhere(...args) { return this._stack('orWhere', args); }
-    whereBetween(...args) { return this._stack('whereBetween', args); }
-    orWhereBetween(...args) { return this._stack('orWhereBetween', args); }
-    whereNotBetween(...args) { return this._stack('whereNotBetween', args); }
-    orWhereNotBetween(...args) { return this._stack('orWhereNotBetween', args); }
-    whereNested(...args) { return this._stack('whereNested', args); }
-    whereExists(...args) { return this._stack('whereExists', args); }
-    orWhereExists(...args) { return this._stack('orWhereExists', args); }
-    whereNotExists(...args) { return this._stack('whereNotExists', args); }
-    orWhereNotExists(...args) { return this._stack('orWhereNotExists', args); }
-    whereIn(...args) { return this._stack('whereIn', args); }
-    orWhereIn(...args) { return this._stack('orWhereIn', args); }
-    whereNotIn(...args) { return this._stack('whereNotIn', args); }
-    orWhereNotIn(...args) { return this._stack('orWhereNotIn', args); }
-    whereNull(...args) { return this._stack('whereNull', args); }
-    orWhereNull(...args) { return this._stack('orWhereNull', args); }
-    whereNotNull(...args) { return this._stack('whereNotNull', args); }
-    orWhereNotNull(...args) { return this._stack('orWhereNotNull', args); }
-    whereDate(...args) { return this._stack('whereDate', args); }
-    whereDay(...args) { return this._stack('whereDay', args); }
-    whereMonth(...args) { return this._stack('whereMonth', args); }
-    whereYear(...args) { return this._stack('whereYear', args); }
+    distinct(...args) { return this._call('distinct', args); }
 
-    groupBy(...columns) { return this._stack('groupBy', columns); }
+    where(...args) { return this._call('where', args); }
+    orWhere(...args) { return this._call('orWhere', args); }
+    orWhere(...args) { return this._call('orWhere', args); }
+    whereBetween(...args) { return this._call('whereBetween', args); }
+    orWhereBetween(...args) { return this._call('orWhereBetween', args); }
+    whereNotBetween(...args) { return this._call('whereNotBetween', args); }
+    orWhereNotBetween(...args) { return this._call('orWhereNotBetween', args); }
+    whereNested(...args) { return this._call('whereNested', args); }
+    whereExists(...args) { return this._call('whereExists', args); }
+    orWhereExists(...args) { return this._call('orWhereExists', args); }
+    whereNotExists(...args) { return this._call('whereNotExists', args); }
+    orWhereNotExists(...args) { return this._call('orWhereNotExists', args); }
+    whereIn(...args) { return this._call('whereIn', args); }
+    orWhereIn(...args) { return this._call('orWhereIn', args); }
+    whereNotIn(...args) { return this._call('whereNotIn', args); }
+    orWhereNotIn(...args) { return this._call('orWhereNotIn', args); }
+    whereNull(...args) { return this._call('whereNull', args); }
+    orWhereNull(...args) { return this._call('orWhereNull', args); }
+    whereNotNull(...args) { return this._call('whereNotNull', args); }
+    orWhereNotNull(...args) { return this._call('orWhereNotNull', args); }
+    whereDate(...args) { return this._call('whereDate', args); }
+    whereDay(...args) { return this._call('whereDay', args); }
+    whereMonth(...args) { return this._call('whereMonth', args); }
+    whereYear(...args) { return this._call('whereYear', args); }
 
-    having(...columns) { return this._stack('having', columns); }
-    orHaving(...columns) { return this._stack('orHaving', columns); }
+    groupBy(...columns) { return this._call('groupBy', columns); }
 
-    orderBy(...order) { return this._stack('orderBy', order); }
-    latest(...order) { return this._stack('latest', order); }
-    oldest(...order) { return this._stack('oldest', order); }
+    having(...columns) { return this._call('having', columns); }
+    orHaving(...columns) { return this._call('orHaving', columns); }
 
-    offset(...offset) { return this._stack('offset', offset); }
-    skip(...skip) { return this._stack('skip', skip); }
-    limit(...limit) { return this._stack('limit', limit); }
-    take(...take) { return this._stack('take', take); }
-    forPage(...forPage) { return this._stack('forPage', forPage); }
+    orderBy(...order) { return this._call('orderBy', order); }
+    latest(...order) { return this._call('latest', order); }
+    oldest(...order) { return this._call('oldest', order); }
+
+    offset(...offset) { return this._call('offset', offset); }
+    skip(...skip) { return this._call('skip', skip); }
+    limit(...limit) { return this._call('limit', limit); }
+    take(...take) { return this._call('take', take); }
+    forPage(...forPage) { return this._call('forPage', forPage); }
+
+    get(columns) {
+        if (columns) {
+            this.select(columns);
+        }
+
+        if ( ! this.endpoint) {
+            throw new Error('Attempted to execute query without an endpoint.');
+        }
+
+        if ( ! this.transport) {
+            throw new Error('Attempted to execute query without a transport.');
+        }
+
+        return this.transport.get(this.endpoint, this.stack);
+    }
 }
