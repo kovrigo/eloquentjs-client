@@ -1,75 +1,447 @@
 /**
- * QueryBuilder
+ * QueryBuilder provides a fluent API for building a query.
  *
- * This provides the same API as Laravel's Query Builder, but
- * contains none of the implementation. We only need to keep
- * track of which methods were called and their arguments.
- *
- * @see API based on https://github.com/laravel/framework/blob/5.1/src/Illuminate/Database/Query/Builder.php
+ * Since we'll be running the query on the server, we don't
+ * really care about grammars or processors, or even the
+ * breakdown of clauses and bindings. Instead, we'll just
+ * record which methods are called and with what arguments.
+ * This does mean the parameters in our function signatures
+ * are not as helpful as they might be - check the Laravel
+ * documentation if any are unclear.
  */
-export default class Builder {
+export default class QueryBuilder {
 
+    /**
+     * Create a new QueryBuilder instance.
+     *
+     * @param {Transport} transport
+     */
     constructor(transport) {
+        /**
+         * The transport class to send/receive the query/results.
+         *
+         * @protected
+         * @type {Transport}
+         */
         this.transport = transport;
-        this.stack     = [];
-        this.endpoint  = null;
+
+        /**
+         * The methods called for this query and their arguments.
+         *
+         * @protected
+         * @type {Array}
+         */
+        this.stack = [];
+
+        /**
+         * The endpoint for this query, equivalent to the "table"
+         * property in Laravel's Builder.
+         *
+         * @protected
+         * @type {string|null}
+         */
+        this.endpoint = null;
     }
 
+    /**
+     * Add a method call to the stack.
+     *
+     * @protected
+     * @param {string} name
+     * @param {*[]} args
+     * @returns {QueryBuilder}
+     */
     _call(name, args) {
         this.stack.push([name, args]);
         return this;
     }
 
+    /**
+     * Set the endpoint for this query.
+     *
+     * @param {string} endpoint
+     * @returns {QueryBuilder}
+     */
     from(endpoint) {
         this.endpoint = endpoint;
         return this;
     }
 
-    select(...columns) { return this._call('select', columns); }
-    addSelect(...columns) { return this._call('addSelect', columns); }
+    /**
+     * Set the columns to be selected.
+     *
+     * @param {...string} columns
+     * @returns {QueryBuilder}
+     */
+    select(...columns) {
+        return this._call('select', columns);
+    }
 
-    distinct(...args) { return this._call('distinct', args); }
+    /**
+     * Add a new select column to the query.
+     *
+     * @param {...string} columns
+     * @returns {QueryBuilder}
+     */
+    addSelect(...columns) {
+        return this._call('addSelect', columns);
+    }
 
-    where(...args) { return this._call('where', args); }
-    orWhere(...args) { return this._call('orWhere', args); }
-    orWhere(...args) { return this._call('orWhere', args); }
-    whereBetween(...args) { return this._call('whereBetween', args); }
-    orWhereBetween(...args) { return this._call('orWhereBetween', args); }
-    whereNotBetween(...args) { return this._call('whereNotBetween', args); }
-    orWhereNotBetween(...args) { return this._call('orWhereNotBetween', args); }
-    whereNested(...args) { return this._call('whereNested', args); }
-    whereExists(...args) { return this._call('whereExists', args); }
-    orWhereExists(...args) { return this._call('orWhereExists', args); }
-    whereNotExists(...args) { return this._call('whereNotExists', args); }
-    orWhereNotExists(...args) { return this._call('orWhereNotExists', args); }
-    whereIn(...args) { return this._call('whereIn', args); }
-    orWhereIn(...args) { return this._call('orWhereIn', args); }
-    whereNotIn(...args) { return this._call('whereNotIn', args); }
-    orWhereNotIn(...args) { return this._call('orWhereNotIn', args); }
-    whereNull(...args) { return this._call('whereNull', args); }
-    orWhereNull(...args) { return this._call('orWhereNull', args); }
-    whereNotNull(...args) { return this._call('whereNotNull', args); }
-    orWhereNotNull(...args) { return this._call('orWhereNotNull', args); }
-    whereDate(...args) { return this._call('whereDate', args); }
-    whereDay(...args) { return this._call('whereDay', args); }
-    whereMonth(...args) { return this._call('whereMonth', args); }
-    whereYear(...args) { return this._call('whereYear', args); }
+    /**
+     * Force the query to only return distinct results.
+     *
+     * @returns {QueryBuilder}
+     */
+    distinct() {
+        return this._call('distinct', []);
+    }
 
-    groupBy(...columns) { return this._call('groupBy', columns); }
+    /**
+     * Add a "where" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    where(...args) {
+        return this._call('where', args);
+    }
 
-    having(...columns) { return this._call('having', columns); }
-    orHaving(...columns) { return this._call('orHaving', columns); }
+    /**
+     * Add a "or where" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhere(...args) {
+        return this._call('orWhere', args);
+    }
 
-    orderBy(...order) { return this._call('orderBy', order); }
-    latest(...order) { return this._call('latest', order); }
-    oldest(...order) { return this._call('oldest', order); }
+    /**
+     * Add a "where between" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereBetween(...args) {
+        return this._call('whereBetween', args);
+    }
 
-    offset(...offset) { return this._call('offset', offset); }
-    skip(...skip) { return this._call('skip', skip); }
-    limit(...limit) { return this._call('limit', limit); }
-    take(...take) { return this._call('take', take); }
-    forPage(...forPage) { return this._call('forPage', forPage); }
+    /**
+     * Add a "or where between" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereBetween(...args) {
+        return this._call('orWhereBetween', args);
+    }
 
+    /**
+     * Add a "where not between" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereNotBetween(...args) {
+        return this._call('whereNotBetween', args);
+    }
+
+    /**
+     * Add a "or where not between" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereNotBetween(...args) {
+        return this._call('orWhereNotBetween', args);
+    }
+
+    /**
+     * Add a nested "where" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereNested(...args) {
+        return this._call('whereNested', args);
+    }
+
+    /**
+     * Add a "where exists" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereExists(...args) {
+        return this._call('whereExists', args);
+    }
+
+    /**
+     * Add a "or where exists" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereExists(...args) {
+        return this._call('orWhereExists', args);
+    }
+
+    /**
+     * Add a "where not exists" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereNotExists(...args) {
+        return this._call('whereNotExists', args);
+    }
+
+    /**
+     * Add a "or where not exists" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereNotExists(...args) {
+        return this._call('orWhereNotExists', args);
+    }
+
+    /**
+     * Add a "where in" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereIn(...args) {
+        return this._call('whereIn', args);
+    }
+
+    /**
+     * Add a "or where in" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereIn(...args) {
+        return this._call('orWhereIn', args);
+    }
+
+    /**
+     * Add a "where not in" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereNotIn(...args) {
+        return this._call('whereNotIn', args);
+    }
+
+    /**
+     * Add a "or where not in" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereNotIn(...args) {
+        return this._call('orWhereNotIn', args);
+    }
+
+    /**
+     * Add a "where _ is null" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereNull(...args) {
+        return this._call('whereNull', args);
+    }
+
+    /**
+     * Add a "or where _ is null" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereNull(...args) {
+        return this._call('orWhereNull', args);
+    }
+
+    /**
+     * Add a "where _ is not null" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereNotNull(...args) {
+        return this._call('whereNotNull', args);
+    }
+
+    /**
+     * Add a "or where _ is not null" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orWhereNotNull(...args) {
+        return this._call('orWhereNotNull', args);
+    }
+
+    /**
+     * Add a date "where" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereDate(...args) {
+        return this._call('whereDate', args);
+    }
+
+    /**
+     * Add a day "where" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereDay(...args) {
+        return this._call('whereDay', args);
+    }
+
+    /**
+     * Add a month "where" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereMonth(...args) {
+        return this._call('whereMonth', args);
+    }
+
+    /**
+     * Add a year "where" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    whereYear(...args) {
+        return this._call('whereYear', args);
+    }
+
+    /**
+     * Add a "group by" clause to the query.
+     *
+     * @param {...string} columns
+     * @returns {QueryBuilder}
+     */
+    groupBy(...columns) {
+        return this._call('groupBy', columns);
+    }
+
+    /**
+     * Add a "having" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    having(...args) {
+        return this._call('having', args);
+    }
+
+    /**
+     * Add a "or having" clause to the query.
+     *
+     * @param {...*} args
+     * @returns {QueryBuilder}
+     */
+    orHaving(...args) {
+        return this._call('orHaving', args);
+    }
+
+    /**
+     * Add a "order by" clause to the query.
+     *
+     * @param {...string} order
+     * @returns {QueryBuilder}
+     */
+    orderBy(...order) {
+        return this._call('orderBy', order);
+    }
+
+    /**
+     * Add a "order by" latest date clause to the query.
+     *
+     * @param {string} [order='created_at']
+     * @returns {QueryBuilder}
+     */
+    latest(order) {
+        return this._call('latest', order ? [order] : []);
+    }
+
+    /**
+     * Add an "order by" oldest date clause to the query.
+     *
+     * @param {string} [order='created_at']
+     * @returns {QueryBuilder}
+     */
+    oldest(order) {
+        return this._call('oldest', order ? [order] : []);
+    }
+
+    /**
+     * Set the "offset" value of the query.
+     *
+     * @param {number} offset
+     * @returns {QueryBuilder}
+     */
+    offset(offset) {
+        return this._call('offset', [offset]);
+    }
+
+    /**
+     * Set the "offset" value of the query.
+     *
+     * @param {number} skip
+     * @returns {QueryBuilder}
+     */
+    skip(skip) {
+        return this._call('skip', [skip]);
+    }
+
+    /**
+     * Set the "limit" value of the query.
+     *
+     * @param {number} limit
+     * @returns {QueryBuilder}
+     */
+    limit(limit) {
+        return this._call('limit', [limit]);
+    }
+
+    /**
+     * Set the "limit" value of the query.
+     *
+     * @param {number} take
+     * @returns {QueryBuilder}
+     */
+    take(take) {
+        return this._call('take', [take]);
+    }
+
+    /**
+     * Set the "limit" and "offset" for a given page.
+     *
+     * @param {...number} forPage
+     * @returns {QueryBuilder}
+     */
+    forPage(...forPage) {
+        return this._call('forPage', forPage);
+    }
+
+    /**
+     * Execute the query as a "select" statement.
+     *
+     * @param {...string} [columns]
+     * @returns {Promise}
+     */
     get(columns) {
         if (columns) {
             this.select(columns);

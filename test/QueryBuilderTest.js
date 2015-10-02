@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import Query from '../src/Query/Builder';
 import Transport from '../src/Query/Transport';
 
+/** @test {QueryBuilder} */
 describe('QueryBuilder', function () {
 
     let query;
@@ -11,6 +12,7 @@ describe('QueryBuilder', function () {
         query = new Query(new Transport());
     });
 
+    /** @test {QueryBuilder#from} */
     describe('from()', function () {
         it('sets the endpoint for executing the query', function () {
             query.from('/api/posts');
@@ -18,6 +20,7 @@ describe('QueryBuilder', function () {
         });
     });
 
+    /** @test {QueryBuilder#get} */
     describe('get()', function () {
         it('throws if no endpoint is set', function () {
             expect(query.get).to.throw(Error);
@@ -55,7 +58,7 @@ describe('QueryBuilder', function () {
     methods.forEach(function (method) {
         describe(method + '()', function () {
             it('adds to the call stack', function () {
-                let testArgs = ['test', 'arguments'];
+                let testArgs = getTestArgs(method);
 
                 query[method].apply(query, testArgs);
 
@@ -69,3 +72,23 @@ describe('QueryBuilder', function () {
     });
 
 });
+
+function getTestArgs(method)
+{
+    switch (method) {
+        case 'distinct':
+        case 'oldest':
+        case 'latest':
+            return [];
+
+        case 'offset':
+        case 'skip':
+        case 'limit':
+        case 'take':
+            return [5];
+
+        default:
+            return ['test', 'arguments'];
+    }
+
+}
