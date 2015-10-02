@@ -1,19 +1,46 @@
-//import QueryBuilder from '../Query/Builder';
+import QueryBuilder from '../Query/Builder';
 
 /**
- * EloquentBuilder
- *
- * Extends the Query Builder with Eloquent specific
- * functionality, such as find(), has(), with(),
- * lists(), value(), etc.
+ * EloquentBuilder wraps the QueryBuilder to provide eager loading
+ * and model hydration, as well as syntactic sugar for fetching by
+ * primary key and handling failure.
  */
-export default class Builder {
+export default class EloquentBuilder {
 
+    /**
+     * Create a new Eloquent Builder instance.
+     *
+     * @param {QueryBuilder} query
+     */
     constructor(query) {
+
+        if ( ! query || ! (query instanceof QueryBuilder)) {
+            throw new Error('Missing argument 1 for EloquentBuilder, expected QueryBuilder');
+        }
+
+        /**
+         * The base QueryBuilder instance.
+         *
+         * @type {QueryBuilder}
+         */
         this.query = query;
-        this.model = null;
+
+        /**
+         * The Model instance being queried
+         *
+         * @ignore
+         * @type {Model|null}
+         */
+        this._model = null;
     }
 
+    /**
+     * Find a model by its primary key.
+     *
+     * @param {number}   id
+     * @param {string[]} [columns] the columns to fetch
+     * @returns {Promise}
+     */
     find(id, columns) {
         if (Array.isArray(id)) {
             return this.findMany(id, columns);
@@ -21,32 +48,78 @@ export default class Builder {
         return this.query._call('find', id).get(columns).then(unwrapFirst);
     }
 
+    /**
+     * Find many models by their primary key.
+     *
+     * @param {number[]} ids
+     * @param {string[]} [columns]
+     * @returns {Promise}
+     */
     findMany(ids, columns) {
         return this.query._call('findMany', ids).get(columns);
     }
 
+    /**
+     * Find a model by its primary key or throw an exception.
+     *
+     * @param {number}   id
+     * @param {string[]} [columns]
+     * @returns {Promise}
+     */
     findOrFail(id, columns) {
         return this.find(id, columns).then(throwIfNotFound);
     }
 
+    /**
+     * Execute the query and get the first result.
+     *
+     * @param {string[]} [columns]
+     * @returns {Promise}
+     */
     first(columns) {
         return this.query.limit(1).get(columns).then(unwrapFirst);
     }
 
+    /**
+     * Execute the query and get the first result or throw an exception.
+     *
+     * @param {string[]} [columns]
+     * @returns {Promise}
+     */
     firstOrFail(columns) {
         return this.first(columns).then(throwIfNotFound);
     }
 
+    /**
+     * Get a single column's value from the first result of a query.
+     *
+     * @param {string} column
+     * @returns {Promise}
+     */
     value(column) {
         return this.first(column).then(function (result) {
             return result[column];
         });
     }
 
+    /**
+     * Get a single column's value from the first result of a query.
+     *
+     * This is an alias for the "value" method.
+     *
+     * @param {string} column
+     * @returns {Promise}
+     */
     pluck(column) {
         return this.value(column);
     }
 
+    /**
+     * Get an array with the values of a given column.
+     *
+     * @param {string} column
+     * @returns {Promise}
+     */
     lists(column) {
         return this.query.get(column).then(function (results) {
             return results.map(function (result) {
@@ -55,26 +128,34 @@ export default class Builder {
         });
     }
 
-    getModel() {
-        return this.model;
-    }
-
-    setModel(model) {
-        this.model = model;
-        return this;
-    }
-
-    getQuery() {
-        return this.query;
-    }
-
-    setQuery(query) {
-        this.query = query;
-        return this;
-    }
-
+    /**
+     * Set the relationships that should be eager loaded.
+     *
+     * @param {string[]} relations
+     * @returns {EloquentBuilder}
+     */
     with(...relations) {
-        return this.query._call('with', relations);
+        this.query._call('with', relations);
+        return this;
+    }
+
+    /**
+     * The Model instance being queried
+     *
+     * @return {Model} model
+     */
+    get model() {
+        if ( ! this._model) throw new Error('EloquentBuilder has no model');
+        return this._model;
+    }
+
+    /**
+     * The Model instance being queried
+     *
+     * @param {Model} model
+     */
+    set model(model) {
+        this._model = model;
     }
 }
 
@@ -91,51 +172,3 @@ function throwIfNotFound(result)
 
     return result;
 }
-
-
-
-/*
- int update(array $values)
- Update a record in the database.
-
- int increment(string $column, int $amount = 1, array $extra = array())
- Increment a column's value by a given amount.
-
- int decrement(string $column, int $amount = 1, array $extra = array())
- Decrement a column's value by a given amount.
-
- mixed delete()
- Delete a record from the database.
-
- mixed forceDelete()
- Run the default delete function on the builder.
-
-
- Builder|Builder has(string $relation, string $operator = '>=', int $count = 1, string $boolean = 'and', Closure $callback = null)
- Add a relationship count condition to the query.
-
- Builder|Builder doesntHave(string $relation, string $boolean = 'and', Closure $callback = null)
- Add a relationship count condition to the query.
-
- Builder|Builder orHas(string $relation, string $operator = '>=', int $count = 1)
- Add a relationship count condition to the query with an "or".
-
-
- mixed __call(string $method, array $parameters)
- Dynamically handle calls into the query instance.
-
- void __clone()
- Force a clone of the underlying query builder when cloning.
-
- Eloquent({
- endpoint: 'posts'
- })
- Eloquent('Post') // Model
-
- Eloquent.define('Post', {
-
- });
-
- Post.where('published', false).get();
-
- */
