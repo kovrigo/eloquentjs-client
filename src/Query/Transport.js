@@ -1,18 +1,31 @@
 import 'isomorphic-fetch';
 
 /**
- * Transport
- *
- * Handles the communication between client and server,
- * and might loosely be considered the analogue of
- * the Illuminate\Database\ConnectionInterface.
+ * Transport handles the communication between client and server.
  */
 export default class Transport {
 
+    /**
+     * Create a new Transport instance.
+     *
+     * @param {*} [http]
+     */
     constructor(http) {
+        /**
+         * Fetch API
+         *
+         * @type {*}
+         */
         this.fetch = http || fetch;
     }
 
+    /**
+     * Execute a query.
+     *
+     * @param {string} endpoint
+     * @param {Array} query
+     * @returns {Promise}
+     */
     get(endpoint, query = []) {
         let url = endpoint;
         if (query.length) {

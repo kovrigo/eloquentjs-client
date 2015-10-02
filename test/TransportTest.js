@@ -2,6 +2,7 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import Transport from '../src/Query/Transport';
 
+/** @test {Transport} */
 describe('Transport', function () {
 
     let mockResponse;
@@ -15,6 +16,7 @@ describe('Transport', function () {
         transport = new Transport(fetchStub);
     });
 
+    /** @test {Transport#get} */
     describe('get()', function () {
         it('makes a GET request', function () {
             transport.get('test');
