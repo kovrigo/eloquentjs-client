@@ -82,6 +82,10 @@ describe('EloquentBuilder', function () {
             builder.with('comments');
             expect(builder.query.stack).to.eql([['with', ['comments']]]);
         });
+        /** @test {EloquentBuilder#with} */
+        it('returns the EloquentBuilder, not the base QueryBuilder', function () {
+            expect(builder.with('comments')).to.equal(builder);
+        });
     });
 
     describe('constructor', function () {
