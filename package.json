@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "prebuild": "rm -rf dist && mkdir dist",
-    "build": "browserify src/index.js -t babelify --outfile dist/index.js",
+    "build": "browserify src/index.js -t babelify -s Eloquent --outfile dist/index.js",
     "test": "mocha test/index.js -w --compilers js:babel/register"
   },
   "repository": {

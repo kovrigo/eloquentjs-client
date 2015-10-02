@@ -1,7 +1,8 @@
-import EloquentBuilder from './EloquentBuilder';
+import Builder from './Builder';
 import {omit} from 'lodash';
 
 export default class Model {
+
     constructor(attributes = {}) {
         Object.defineProperty(this, 'original', {
             value: attributes
@@ -26,5 +27,9 @@ export default class Model {
         return omit(this.getAttributes(), (value, prop) => {
             return this.original[prop] == value;
         });
+    }
+
+    static where(...args) {
+        console.log(args);
     }
 }

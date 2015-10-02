@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
-import Model from '../src/Model';
+import Model from '../src/Eloquent/Model';
 
 describe('Model', function () {
 

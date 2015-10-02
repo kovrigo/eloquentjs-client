@@ -1,8 +1,8 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
-import Eloquent from '../src/EloquentBuilder';
-import Query from '../src/QueryBuilder';
-import Transport from '../src/Transport';
+import Eloquent from '../src/Eloquent/Builder';
+import Query from '../src/Query/Builder';
+import Transport from '../src/Query/Transport';
 
 describe('EloquentBuilder', function () {
 

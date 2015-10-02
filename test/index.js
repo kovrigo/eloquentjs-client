@@ -10,3 +10,4 @@ import './QueryBuilderTest';
 import './EloquentBuilderTest';
 import './TransportTest';
 import './ModelTest';
+import './ManagerTest';

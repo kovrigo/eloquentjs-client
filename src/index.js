@@ -1,5 +1,5 @@
-import Model from './Model';
+import Manager from './Manager';
 
-export default function () {
-    return new Model();
+export default function Eloquent(mixed) {
+    return new Manager();
 };

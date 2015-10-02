@@ -7,7 +7,7 @@
  *
  * @see API based on https://github.com/laravel/framework/blob/5.1/src/Illuminate/Database/Query/Builder.php
  */
-export default class QueryBuilder {
+export default class Builder {
 
     constructor(transport) {
         this.transport = transport;

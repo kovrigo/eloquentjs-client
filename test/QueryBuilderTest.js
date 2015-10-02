@@ -1,7 +1,7 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
-import Query from '../src/QueryBuilder';
-import Transport from '../src/Transport';
+import Query from '../src/Query/Builder';
+import Transport from '../src/Query/Transport';
 
 describe('QueryBuilder', function () {
 

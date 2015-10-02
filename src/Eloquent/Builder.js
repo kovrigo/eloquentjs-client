@@ -1,4 +1,4 @@
-import QueryBuilder from './QueryBuilder';
+//import QueryBuilder from '../Query/Builder';
 
 /**
  * EloquentBuilder
@@ -7,7 +7,7 @@ import QueryBuilder from './QueryBuilder';
  * functionality, such as find(), has(), with(),
  * lists(), value(), etc.
  */
-export default class EloquentBuilder {
+export default class Builder {
 
     constructor(query) {
         this.query = query;
@@ -91,3 +91,51 @@ function throwIfNotFound(result)
 
     return result;
 }
+
+
+
+/*
+ int update(array $values)
+ Update a record in the database.
+
+ int increment(string $column, int $amount = 1, array $extra = array())
+ Increment a column's value by a given amount.
+
+ int decrement(string $column, int $amount = 1, array $extra = array())
+ Decrement a column's value by a given amount.
+
+ mixed delete()
+ Delete a record from the database.
+
+ mixed forceDelete()
+ Run the default delete function on the builder.
+
+
+ Builder|Builder has(string $relation, string $operator = '>=', int $count = 1, string $boolean = 'and', Closure $callback = null)
+ Add a relationship count condition to the query.
+
+ Builder|Builder doesntHave(string $relation, string $boolean = 'and', Closure $callback = null)
+ Add a relationship count condition to the query.
+
+ Builder|Builder orHas(string $relation, string $operator = '>=', int $count = 1)
+ Add a relationship count condition to the query with an "or".
+
+
+ mixed __call(string $method, array $parameters)
+ Dynamically handle calls into the query instance.
+
+ void __clone()
+ Force a clone of the underlying query builder when cloning.
+
+ Eloquent({
+ endpoint: 'posts'
+ })
+ Eloquent('Post') // Model
+
+ Eloquent.define('Post', {
+
+ });
+
+ Post.where('published', false).get();
+
+ */

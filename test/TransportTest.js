@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
-import Transport from '../src/Transport';
+import Transport from '../src/Query/Transport';
 
 describe('Transport', function () {
 
