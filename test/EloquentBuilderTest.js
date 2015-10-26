@@ -97,7 +97,7 @@ describe('EloquentBuilder', function () {
     });
 
     describe('model instance being queried', function () {
-        it('throws if not set', function () {
+        it('has a getter that throws if not set', function () {
             expect(() => builder.model).to.throw();
         });
 
