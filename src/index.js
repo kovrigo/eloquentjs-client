@@ -32,6 +32,9 @@ let manager;
  * // Fetch a previously defined model
  * let Post = Eloquent('Post');
  *
+ * // or
+ * let Post = Eloquent.Post;
+ *
  * // It's (mostly) the same API as Laravel's Eloquent
  * // so you already know how to query the posts table...
  * Post.whereNotNull('published')
@@ -61,6 +64,11 @@ let Eloquent = function (name, definition) {
     }
 
     if (definition) {
+        Object.defineProperty(Eloquent, name, {
+            get: function () {
+                return manager.named(name);
+            }
+        });
         return manager.define(name, definition);
     }
 
