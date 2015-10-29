@@ -1,27 +1,20 @@
+import QueryBuilder from '../Query/Builder';
+
 /**
- * EloquentBuilder wraps the QueryBuilder to provide eager loading
- * and model hydration, as well as syntactic sugar for fetching by
- * primary key and handling failure.
+ * EloquentBuilder extends the QueryBuilder and adds support
+ * for relationships, as well as syntactic sugar for finding
+ * records by primary key, handling no results, etc.
  */
-export default class EloquentBuilder {
+export default class EloquentBuilder extends QueryBuilder {
 
     /**
      * Create a new Eloquent Builder instance.
      *
-     * @param {QueryBuilder} query
+     * @param {Transport} transport
      */
-    constructor(query) {
+    constructor(transport) {
 
-        if ( ! query || typeof query.get !== 'function') {
-            throw new Error('Missing argument 1 for EloquentBuilder, expected a QueryBuilder');
-        }
-
-        /**
-         * The base QueryBuilder instance.
-         *
-         * @type {QueryBuilder}
-         */
-        this.query = query;
+        super(transport);
 
         /**
          * The Model instance being queried
@@ -43,7 +36,7 @@ export default class EloquentBuilder {
         if (Array.isArray(id)) {
             return this.findMany(id, columns);
         }
-        return this.query._call('find', id).get(columns).then(unwrapFirst);
+        return this._call('find', id).get(columns).then(unwrapFirst);
     }
 
     /**
@@ -54,7 +47,7 @@ export default class EloquentBuilder {
      * @returns {Promise}
      */
     findMany(ids, columns) {
-        return this.query._call('findMany', ids).get(columns);
+        return this._call('findMany', ids).get(columns);
     }
 
     /**
@@ -75,7 +68,7 @@ export default class EloquentBuilder {
      * @returns {Promise}
      */
     first(columns) {
-        return this.query.limit(1).get(columns).then(unwrapFirst);
+        return this.limit(1).get(columns).then(unwrapFirst);
     }
 
     /**
@@ -119,7 +112,7 @@ export default class EloquentBuilder {
      * @returns {Promise}
      */
     lists(column) {
-        return this.query.get(column).then(function (results) {
+        return this.get(column).then(function (results) {
             return results.map(function (result) {
                 return result[column];
             });
@@ -133,7 +126,7 @@ export default class EloquentBuilder {
      * @returns {EloquentBuilder}
      */
     with(...relations) {
-        this.query._call('with', relations);
+        this._call('with', relations);
         return this;
     }
 
@@ -154,9 +147,9 @@ export default class EloquentBuilder {
      */
     set model(model) {
         this._model = model;
-        this.query.from(model.endpoint);
+        this.from(model.endpoint);
     }
-}
+};
 
 function unwrapFirst(results)
 {

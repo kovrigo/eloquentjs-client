@@ -6,19 +6,17 @@ import EloquentBuilder from '../src/Eloquent/Builder';
 describe('EloquentBuilder', function () {
 
     let builder;
-    let queryBuilder;
+    let transport;
     let rows;
     let row = function (id, label) { return { id, label }; };
 
     beforeEach(function () {
         rows = [row(1, 'first'), row(2, 'second'), row(3, 'third')];
-        queryBuilder = {
-            get: sinon.stub().resolves(rows),
-            _call: sinon.stub().returnsThis(),
-            limit: sinon.stub().returnsThis(),
-            from: sinon.stub().returnsThis()
+        transport = {
+            get: sinon.stub().resolves(rows)
         };
-        builder = new EloquentBuilder(queryBuilder);
+        builder = new EloquentBuilder(transport);
+        builder.from('api/posts');
     });
 
     /** @test {EloquentBuilder#find} */
@@ -38,7 +36,7 @@ describe('EloquentBuilder', function () {
     describe('findOrFail()', function () {
         /** @test {EloquentBuilder#findOrFail} */
         it('throws if no model was found', function () {
-            queryBuilder.get.resolves([]);
+            transport.get.resolves([]);
             return expect(builder.findOrFail(1)).to.eventually.be.rejectedWith('ModelNotFoundException');
         });
     });
@@ -51,7 +49,7 @@ describe('EloquentBuilder', function () {
     describe('firstOrFail()', function () {
         /** @test {EloquentBuilder#firstOrFail} */
         it('throws if no model was found', function () {
-            queryBuilder.get.resolves([]);
+            transport.get.resolves([]);
             return expect(builder.firstOrFail()).to.eventually.be.rejectedWith('ModelNotFoundException');
         });
     });
@@ -81,19 +79,11 @@ describe('EloquentBuilder', function () {
         /** @test {EloquentBuilder#with} */
         it('sets the relationships that should be eager loaded', function () {
             builder.with('comments');
-            expect(queryBuilder._call).to.have.been.calledWith('with', ['comments']);
+            expect(builder.stack[0]).to.eql(['with', ['comments']]);
         });
         /** @test {EloquentBuilder#with} */
         it('returns the EloquentBuilder, not the base QueryBuilder', function () {
             expect(builder.with('comments')).to.equal(builder);
-        });
-    });
-
-    describe('constructor', function () {
-        /** @test {EloquentBuilder} */
-        it('throws if not passed a QueryBuilder', function () {
-            expect(() => new EloquentBuilder()).to.throw();
-            expect(() => new EloquentBuilder('rah')).to.throw();
         });
     });
 
@@ -110,7 +100,7 @@ describe('EloquentBuilder', function () {
 
         it('provides the query builder with its endpoint', function () {
             builder.model = { endpoint: 'myApi' };
-            expect(queryBuilder.from).to.have.been.calledWith('myApi');
+            expect(builder.endpoint).to.equal('myApi');
         });
     });
 });

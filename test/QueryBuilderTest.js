@@ -11,6 +11,14 @@ describe('QueryBuilder', function () {
         query = new QueryBuilder({ get: sinon.stub() });
     });
 
+    describe('constructor', function () {
+        /** @test {QueryBuilder} */
+        it('throws if not passed a Transport', function () {
+            expect(() => new QueryBuilder()).to.throw();
+            expect(() => new QueryBuilder('rah')).to.throw();
+        });
+    });
+
     /** @test {QueryBuilder#from} */
     describe('from()', function () {
         it('sets the endpoint for executing the query', function () {
@@ -23,9 +31,6 @@ describe('QueryBuilder', function () {
     describe('get()', function () {
         it('throws if no endpoint is set', function () {
             expect(query.get).to.throw(Error);
-        });
-        it('throws if no transport is set', function () {
-            expect(new QueryBuilder().from('/api/posts').get).to.throw(Error);
         });
         it('calls the transporter with the endpoint and query stack', function () {
             query.transport.get = sinon.spy();

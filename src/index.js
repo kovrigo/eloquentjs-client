@@ -10,7 +10,7 @@ let manager;
  * Define or retrieve a model definition.
  *
  * @param {string} name
- * @param {Object|function(base: Model): Model|undefined} definition
+ * @param {Object|function(base: Model): Model|undefined} [definition]
  * The definition can be either an object of properties
  * to merge into the class, or a callback that receives
  * the base class and returns an extended class definition.

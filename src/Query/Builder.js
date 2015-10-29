@@ -17,6 +17,11 @@ export default class QueryBuilder {
      * @param {Transport} transport
      */
     constructor(transport) {
+
+        if ( ! transport || typeof transport.get !== 'function') {
+            throw new Error('Missing argument 1 for QueryBuilder, expected Transport');
+        }
+
         /**
          * The transport class to send/receive the query/results.
          *
@@ -449,10 +454,6 @@ export default class QueryBuilder {
 
         if ( ! this.endpoint) {
             throw new Error('Attempted to execute query without an endpoint.');
-        }
-
-        if ( ! this.transport) {
-            throw new Error('Attempted to execute query without a transport.');
         }
 
         return this.transport.get(this.endpoint, this.stack);
