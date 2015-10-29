@@ -1,15 +1,15 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
-import Manager from '../src/Manager';
-import Model from '../src/Eloquent/Model';
 import {merge} from 'lodash';
+import Manager from '../src/Manager';
 
 describe('Manager', function () {
 
     let manager;
+    let baseClass = class {};
 
     beforeEach(function () {
-        manager = new Manager();
+        manager = new Manager(baseClass);
     });
 
     it('defines an Eloquent model', function () {
@@ -20,7 +20,7 @@ describe('Manager', function () {
     it('gets a previously defined model', function () {
         manager.define('Post', {});
         let Post = manager.named('Post');
-        expect(new Post()).to.be.an.instanceof(Model);
+        expect(new Post()).to.be.an.instanceof(baseClass);
     });
 
     it('applies the given properties to the returned class', function () {

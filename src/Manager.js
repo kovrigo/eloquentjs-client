@@ -1,4 +1,3 @@
-import Model from './Eloquent/Model';
 import {find} from 'lodash';
 
 /**
@@ -7,8 +6,7 @@ import {find} from 'lodash';
  * stored as factory functions and only instantiated when needed.
  *
  * @example
- * import Manager from 'laravel-eloquentjs/src/Manager';
- * let manager = new Manager();
+ * let manager = new Manager(BaseModel);
  *
  * //
  * // To configure your models, use the .define() method.
@@ -33,20 +31,16 @@ import {find} from 'lodash';
  * //
  * let Post = manager.named('Post');
  *
- * //
- * // You already know how to use the Post class, since
- * // it's the same API as Laravel's Eloquent.
- * //
- * Post.whereNotNull('published')
- *     .orderBy('published')
- *     .get()
- *     .then(function (results) {
- *         console.log(results);
- *     });
+ * @desc
+ * Note: the default export for the laravel-eloquentjs module
+ * is an overloaded factory function that provides syntactic
+ * sugar - you likely won't need to use the Manager directly.
  */
 export default class Manager {
 
     /**
+     * Create a new Manager instance.
+     *
      * @param {Model} BaseModel
      */
     constructor(BaseModel) {
@@ -60,10 +54,11 @@ export default class Manager {
         this.registry = [];
 
         /**
+         * Factory function, returns the base model class
          * @protected
-         * @type {Model}
+         * @type {function(): Model}
          */
-        this.baseModel = BaseModel || Model;
+        this.baseModel = BaseModel;
     }
 
     /**

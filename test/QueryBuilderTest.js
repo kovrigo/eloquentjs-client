@@ -1,7 +1,6 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
-import Query from '../src/Query/Builder';
-import Transport from '../src/Query/Transport';
+import QueryBuilder from '../src/Query/Builder';
 
 /** @test {QueryBuilder} */
 describe('QueryBuilder', function () {
@@ -9,7 +8,7 @@ describe('QueryBuilder', function () {
     let query;
 
     beforeEach(function () {
-        query = new Query(new Transport());
+        query = new QueryBuilder({ get: sinon.stub() });
     });
 
     /** @test {QueryBuilder#from} */
@@ -26,7 +25,7 @@ describe('QueryBuilder', function () {
             expect(query.get).to.throw(Error);
         });
         it('throws if no transport is set', function () {
-            expect(new Query().from('/api/posts').get).to.throw(Error);
+            expect(new QueryBuilder().from('/api/posts').get).to.throw(Error);
         });
         it('calls the transporter with the endpoint and query stack', function () {
             query.transport.get = sinon.spy();

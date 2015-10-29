@@ -1,5 +1,3 @@
-import QueryBuilder from '../Query/Builder';
-
 /**
  * EloquentBuilder wraps the QueryBuilder to provide eager loading
  * and model hydration, as well as syntactic sugar for fetching by
@@ -14,8 +12,8 @@ export default class EloquentBuilder {
      */
     constructor(query) {
 
-        if ( ! query || ! (query instanceof QueryBuilder)) {
-            throw new Error('Missing argument 1 for EloquentBuilder, expected QueryBuilder');
+        if ( ! query || typeof query.get !== 'function') {
+            throw new Error('Missing argument 1 for EloquentBuilder, expected a QueryBuilder');
         }
 
         /**
@@ -156,6 +154,7 @@ export default class EloquentBuilder {
      */
     set model(model) {
         this._model = model;
+        this.query.from(model.endpoint);
     }
 }
 

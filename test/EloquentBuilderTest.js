@@ -1,21 +1,24 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
 import EloquentBuilder from '../src/Eloquent/Builder';
-import QueryBuilder from '../src/Query/Builder';
 
 /** @test {EloquentBuilder} */
 describe('EloquentBuilder', function () {
 
     let builder;
-    let query;
+    let queryBuilder;
     let rows;
-    let row = function (label) { return {label}; };
+    let row = function (id, label) { return { id, label }; };
 
     beforeEach(function () {
-        rows = [row('first'), row('second'), row('third')];
-        query = new QueryBuilder();
-        builder = new EloquentBuilder(query);
-        sinon.stub(query, 'get').resolves(rows);
+        rows = [row(1, 'first'), row(2, 'second'), row(3, 'third')];
+        queryBuilder = {
+            get: sinon.stub().resolves(rows),
+            _call: sinon.stub().returnsThis(),
+            limit: sinon.stub().returnsThis(),
+            from: sinon.stub().returnsThis()
+        };
+        builder = new EloquentBuilder(queryBuilder);
     });
 
     /** @test {EloquentBuilder#find} */
@@ -35,7 +38,7 @@ describe('EloquentBuilder', function () {
     describe('findOrFail()', function () {
         /** @test {EloquentBuilder#findOrFail} */
         it('throws if no model was found', function () {
-            builder.query.get.resolves([]);
+            queryBuilder.get.resolves([]);
             return expect(builder.findOrFail(1)).to.eventually.be.rejectedWith('ModelNotFoundException');
         });
     });
@@ -48,7 +51,7 @@ describe('EloquentBuilder', function () {
     describe('firstOrFail()', function () {
         /** @test {EloquentBuilder#firstOrFail} */
         it('throws if no model was found', function () {
-            builder.query.get.resolves([]);
+            queryBuilder.get.resolves([]);
             return expect(builder.firstOrFail()).to.eventually.be.rejectedWith('ModelNotFoundException');
         });
     });
@@ -56,16 +59,14 @@ describe('EloquentBuilder', function () {
     describe('pluck()', function () {
         /** @test {EloquentBuilder#pluck} */
         it('gets a single column\'s value from the first result of a query', function () {
-            builder.query.get.resolves([{ id: 1, name: 'Roger' }]);
-            return expect(builder.value('name')).to.eventually.equal('Roger');
+            return expect(builder.value('label')).to.eventually.equal('first');
         });
     });
 
     describe('value()', function () {
         /** @test {EloquentBuilder#value} */
         it('is an alias for pluck()', function () {
-            sinon.stub(builder, 'pluck').resolves('Roger');
-            return expect(builder.pluck('name')).to.eventually.equal('Roger');
+            return expect(builder.pluck('label')).to.eventually.equal('first');
         });
     });
 
@@ -80,7 +81,7 @@ describe('EloquentBuilder', function () {
         /** @test {EloquentBuilder#with} */
         it('sets the relationships that should be eager loaded', function () {
             builder.with('comments');
-            expect(builder.query.stack).to.eql([['with', ['comments']]]);
+            expect(queryBuilder._call).to.have.been.calledWith('with', ['comments']);
         });
         /** @test {EloquentBuilder#with} */
         it('returns the EloquentBuilder, not the base QueryBuilder', function () {
@@ -102,9 +103,14 @@ describe('EloquentBuilder', function () {
         });
 
         it('has a setter', function () {
-            let model = sinon.spy();
+            let model = {};
             builder.model = model;
             expect(builder.model).to.equal(model);
+        });
+
+        it('provides the query builder with its endpoint', function () {
+            builder.model = { endpoint: 'myApi' };
+            expect(queryBuilder.from).to.have.been.calledWith('myApi');
         });
     });
 });

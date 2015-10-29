@@ -6,8 +6,8 @@
  * breakdown of clauses and bindings. Instead, we'll just
  * record which methods are called and with what arguments.
  * This does mean the parameters in our function signatures
- * are not as helpful as they might be - check the Laravel
- * documentation if any are unclear.
+ * and docs are not as helpful as they might be - check the
+ * Laravel documentation if any are unclear.
  */
 export default class QueryBuilder {
 
@@ -29,7 +29,7 @@ export default class QueryBuilder {
          * The methods called for this query and their arguments.
          *
          * @protected
-         * @type {Array}
+         * @type {Array[]}
          */
         this.stack = [];
 
