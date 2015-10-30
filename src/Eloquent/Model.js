@@ -80,6 +80,29 @@ class Model {
     static query() {
         return (new this()).newQuery();
     }
+
+    /**
+     * Create a collection of models from plain objects.
+     *
+     * @param {Object[]} items
+     * @returns {Model[]}
+     */
+    hydrate(items) {
+        return items.map((attributes) => this.newInstance(attributes, true));
+    }
+
+    /**
+     * Create a new instance of the current model.
+     *
+     * @param {Object}  attributes
+     * @param {boolean} exists
+     * @returns {Model}
+     */
+    newInstance(attributes = {}, exists = false) {
+        let instance = new this.constructor(attributes);
+        instance.exists = exists;
+        return instance;
+    }
 }
 
 /*

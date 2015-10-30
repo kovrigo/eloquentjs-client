@@ -57,7 +57,6 @@ describe('Model', function () {
         expect(builder._getModel()).to.be.an.instanceOf(Person);
     });
 
-
     describe('query builder', function () {
         it('proxies query methods to a new builder instance', function () {
             expect(person.where('a', '=', 'b')).to.be.an.instanceOf(EloquentBuilder);
@@ -66,6 +65,23 @@ describe('Model', function () {
         it('can be called statically', function () {
             expect(Person.where('a', '=', 'b')).to.be.an.instanceOf(EloquentBuilder);
         });
+    });
+
+    describe('hydrate()', function () {
+
+        it('creates an array of models from an array of plain objects', function () {
+            let person1 = attributes;
+            let person2 = { name: 'Donald', email: 'donald@example.com' };
+
+            let hydrated = person.hydrate([person1, person2]);
+
+            expect(hydrated).to.have.length(2);
+            expect(hydrated[0]).to.be.an.instanceOf(Person);
+            expect(hydrated[1]).to.be.an.instanceOf(Person);
+            expect(hydrated[0].name).to.equal('Dave');
+            expect(hydrated[1].name).to.equal('Donald');
+        });
+
     });
 
 });
