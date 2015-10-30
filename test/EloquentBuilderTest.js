@@ -88,18 +88,14 @@ describe('EloquentBuilder', function () {
     });
 
     describe('model instance being queried', function () {
-        it('has a getter that throws if not set', function () {
-            expect(() => builder.model).to.throw();
-        });
-
-        it('has a setter', function () {
+        it('has a setter and getter', function () {
             let model = {};
-            builder.model = model;
-            expect(builder.model).to.equal(model);
+            builder._setModel(model);
+            expect(builder._getModel()).to.equal(model);
         });
 
         it('provides the query builder with its endpoint', function () {
-            builder.model = { endpoint: 'myApi' };
+            builder._setModel({ endpoint: 'myApi' });
             expect(builder.endpoint).to.equal('myApi');
         });
     });

@@ -6,11 +6,7 @@ import EloquentBuilder from '../src/Eloquent/Builder';
 /** @test {Model} */
 describe('Model', function () {
 
-    let Person = class extends Model {
-        boot() {
-            this.endpoint = 'api/people';
-        }
-    };
+    let Person = class extends Model {};
     let person;
     let attributes = {
         name: 'Dave',
@@ -51,13 +47,25 @@ describe('Model', function () {
     it('gets a new query builder from a model instance', function () {
         let builder = person.newQuery();
         expect(builder).to.be.an.instanceOf(EloquentBuilder);
-        expect(builder.model).to.equal(person);
+        expect(builder._getModel()).to.equal(person);
     });
 
     /** @test {Model#query} */
     it('gets a new query builder from the model prototype', function () {
         let builder = Person.query();
         expect(builder).to.be.an.instanceOf(EloquentBuilder);
-        expect(builder.model).to.be.an.instanceOf(Person);
+        expect(builder._getModel()).to.be.an.instanceOf(Person);
     });
+
+
+    describe('query builder', function () {
+        it('proxies query methods to a new builder instance', function () {
+            expect(person.where('a', '=', 'b')).to.be.an.instanceOf(EloquentBuilder);
+        });
+
+        it('can be called statically', function () {
+            expect(Person.where('a', '=', 'b')).to.be.an.instanceOf(EloquentBuilder);
+        });
+    });
+
 });

@@ -19,7 +19,7 @@ export default class EloquentBuilder extends QueryBuilder {
         /**
          * The Model instance being queried
          *
-         * @ignore
+         * @protected
          * @type {Model|null}
          */
         this._model = null;
@@ -133,19 +133,20 @@ export default class EloquentBuilder extends QueryBuilder {
     /**
      * The Model instance being queried
      *
+     * @protected
      * @return {Model} model
      */
-    get model() {
-        if ( ! this._model) throw new Error('EloquentBuilder has no model');
+    _getModel() {
         return this._model;
     }
 
     /**
      * The Model instance being queried
      *
+     * @protected
      * @param {Model} model
      */
-    set model(model) {
+    _setModel(model) {
         this._model = model;
         this.from(model.endpoint);
     }
