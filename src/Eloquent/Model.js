@@ -79,15 +79,6 @@ class Model {
     }
 
     /**
-     * Get a new Eloquent query builder for this model.
-     *
-     * @returns {EloquentBuilder}
-     */
-    static query() {
-        return (new this()).newQuery();
-    }
-
-    /**
      * Create a collection of models from plain objects.
      *
      * @param {Object[]} items
@@ -108,6 +99,27 @@ class Model {
         let instance = new this.constructor(attributes);
         instance.exists = exists;
         return instance;
+    }
+
+    /**
+     * Get a new Eloquent query builder for this model.
+     *
+     * @static
+     * @returns {EloquentBuilder}
+     */
+    static query() {
+        return (new this()).newQuery();
+    }
+
+    /**
+     * Fetch all models from this endpoint.
+     *
+     * @static
+     * @param {string|string[]} [columns]
+     * @returns {Promise}
+     */
+    static all(columns) {
+        return (new this()).newQuery().get(columns);
     }
 }
 

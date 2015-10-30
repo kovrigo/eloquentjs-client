@@ -68,7 +68,6 @@ describe('Model', function () {
     });
 
     describe('hydrate()', function () {
-
         /** @test {Model#hydrate} */
         it('creates an array of models from an array of plain objects', function () {
             let person1 = attributes;
@@ -82,7 +81,13 @@ describe('Model', function () {
             expect(hydrated[0].name).to.equal('Dave');
             expect(hydrated[1].name).to.equal('Donald');
         });
-
     });
 
+    describe('all()', function () {
+        /** @test {Model#all} */
+        it('fetches all models', function () {
+            sinon.stub(EloquentBuilder.prototype, 'get').returns('ALL');
+            expect(Person.all()).to.equal('ALL');
+        });
+    });
 });
