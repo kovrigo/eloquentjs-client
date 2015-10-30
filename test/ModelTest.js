@@ -69,6 +69,7 @@ describe('Model', function () {
 
     describe('hydrate()', function () {
 
+        /** @test {Model#hydrate} */
         it('creates an array of models from an array of plain objects', function () {
             let person1 = attributes;
             let person2 = { name: 'Donald', email: 'donald@example.com' };

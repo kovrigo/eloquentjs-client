@@ -13,8 +13,14 @@ class Model {
      * @param attributes
      */
     constructor(attributes = {}) {
-        Object.defineProperty(this, 'original', {
-            value: attributes
+        Object.defineProperties(this, {
+            original: {
+                value: attributes
+            },
+            exists: {
+                value: false,
+                writable: true
+            }
         });
         Object.assign(this, attributes);
     }

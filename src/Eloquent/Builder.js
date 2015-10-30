@@ -131,6 +131,16 @@ export default class EloquentBuilder extends QueryBuilder {
     }
 
     /**
+     * Execute the query and return a promise that resolves with an array of models.
+     *
+     * @param {string|string[]} [columns]
+     * @returns {Promise}
+     */
+    get(columns) {
+        return super.get(columns).then((results) => this._model.hydrate(results));
+    }
+
+    /**
      * The Model instance being queried
      *
      * @protected
