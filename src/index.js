@@ -81,7 +81,6 @@ let Eloquent = function (name, definition) {
  * @property {function(): QueryBuilder} Query
  * @property {function(): Transport} Transport
  * @property {function(): Manager} Manager
- * @property {Model} Model
  */
 Eloquent.make = {
     Builder: function () {
@@ -95,8 +94,12 @@ Eloquent.make = {
     },
     Manager: function () {
         return new Manager(Model);
-    },
-    Model
+    }
 };
+
+/**
+ * @type {Model} Eloquent.Model
+ */
+Eloquent.Model = Model;
 
 export default Eloquent;
