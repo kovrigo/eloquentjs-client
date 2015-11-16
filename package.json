@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "prebuild": "rm -rf dist && mkdir dist",
-    "build": "browserify src/index.js -t babelify -s Eloquent --outfile dist/index.js",
-    "test": "mocha test/index.js -w --compilers js:babel/register"
+    "build": "browserify src/index.js -g uglifyify -t babelify -s Eloquent --outfile dist/index.js",
+    "test": "mocha test/index.js -w --compilers js:babel/register",
+    "test:single": "istanbul cover _mocha -- -R spec test/index.js --compilers js:babel/register",
+    "build-docs": "esdoc -c ./esdoc.json"
   },
   "repository": {
     "type": "git",
@@ -24,15 +26,20 @@
   "homepage": "https://github.com/parsnick/laravel-eloquentjs#readme",
   "devDependencies": {
     "babel": "^5.8.23",
+    "babelify": "^6.4.0",
+    "browserify": "^12.0.1",
     "chai": "^3.3.0",
     "chai-as-promised": "^5.1.0",
+    "fetch-mock": "^2.3.0",
+    "istanbul": "^0.4.0",
+    "lodash": "^3.10.1",
     "mocha": "^2.3.3",
     "sinon": "^1.17.1",
     "sinon-as-promised": "^4.0.0",
-    "sinon-chai": "^2.8.0"
+    "sinon-chai": "^2.8.0",
+    "uglifyify": "^3.0.1"
   },
   "dependencies": {
-    "isomorphic-fetch": "^2.1.1",
-    "lodash": "^3.10.1"
+    "isomorphic-fetch": "^2.1.1"
   }
 }
