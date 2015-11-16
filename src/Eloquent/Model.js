@@ -4,7 +4,7 @@ import EloquentBuilder from './Builder';
 /**
  * Model
  */
-class Model {
+export default class Model {
 
     /**
      * Create a new Model instance.
@@ -171,6 +171,3 @@ function getMethods(obj)
         )
     });
 }
-
-export default Model;
-

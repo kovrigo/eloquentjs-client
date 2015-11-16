@@ -3,7 +3,7 @@ import 'isomorphic-fetch';
 /**
  * Transport handles the communication between client and server.
  */
-export default {
+export default class Transport {
 
     /**
      * Execute a query.
@@ -19,4 +19,4 @@ export default {
         }
         return fetch(url).then(response => response.json());
     }
-}
+};

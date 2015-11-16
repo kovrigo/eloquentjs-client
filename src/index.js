@@ -78,7 +78,6 @@ let Eloquent = function (name, definition) {
 /**
  * @type {Object} Eloquent.make
  * @property {function(): EloquentBuilder} Builder
- * @property {function(): QueryBuilder} Query
  * @property {function(): Transport} Transport
  * @property {function(): Manager} Manager
  */
@@ -86,20 +85,13 @@ Eloquent.make = {
     Builder: function () {
         return new EloquentBuilder(this.Transport());
     },
-    Query: function () {
-        return new QueryBuilder(this.Transport());
-    },
     Transport: function () {
-        return Transport;
+        return new Transport();
     },
     Manager: function () {
         return new Manager(Model);
     }
 };
 
-/**
- * @type {Model} Eloquent.Model
- */
-Eloquent.Model = Model;
 
 export default Eloquent;
