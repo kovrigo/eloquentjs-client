@@ -11,3 +11,4 @@ import './EloquentBuilderTest';
 import './TransportTest';
 import './ModelTest';
 import './ManagerTest';
+import './ModuleTest';

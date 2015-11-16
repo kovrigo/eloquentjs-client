@@ -84,7 +84,7 @@ let Eloquent = function (name, definition) {
  */
 Eloquent.make = {
     Builder: function () {
-        return new EloquentBuilder(this.Query());
+        return new EloquentBuilder(this.Transport());
     },
     Query: function () {
         return new QueryBuilder(this.Transport());

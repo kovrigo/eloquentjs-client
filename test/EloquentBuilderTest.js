@@ -12,11 +12,11 @@ describe('EloquentBuilder', function () {
     let rows;
     let row = function (id, name) { return { id, name }; };
     class Person extends Model {};
+    Person.endpoint = 'api';
 
     beforeEach(function () {
         // Create the model associated with this builder
         model = new Person();
-        model.endpoint = 'api/posts';
 
         // Stub out the http call
         rows = [row(1, 'first'), row(2, 'second'), row(3, 'third')];
@@ -107,8 +107,8 @@ describe('EloquentBuilder', function () {
         });
 
         it('provides the query builder with its endpoint', function () {
-            builder._setModel({ endpoint: 'myApi' });
-            expect(builder.endpoint).to.equal('myApi');
+            builder._setModel(model);
+            expect(builder.endpoint).to.equal('api');
         });
     });
 

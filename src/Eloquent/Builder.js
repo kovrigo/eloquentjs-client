@@ -158,7 +158,7 @@ export default class EloquentBuilder extends QueryBuilder {
      */
     _setModel(model) {
         this._model = model;
-        this.from(model.endpoint);
+        this.from(model.__proto__.constructor.endpoint);
     }
 };
 
