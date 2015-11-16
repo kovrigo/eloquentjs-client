@@ -90,7 +90,7 @@ Eloquent.make = {
         return new QueryBuilder(this.Transport());
     },
     Transport: function () {
-        return new Transport();
+        return Transport;
     },
     Manager: function () {
         return new Manager(Model);

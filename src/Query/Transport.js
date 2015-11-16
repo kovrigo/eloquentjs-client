@@ -3,21 +3,7 @@ import 'isomorphic-fetch';
 /**
  * Transport handles the communication between client and server.
  */
-export default class Transport {
-
-    /**
-     * Create a new Transport instance.
-     *
-     * @param {*} [http]
-     */
-    constructor(http) {
-        /**
-         * Fetch API
-         *
-         * @type {*}
-         */
-        this.fetch = http || fetch;
-    }
+export default {
 
     /**
      * Execute a query.
@@ -31,9 +17,6 @@ export default class Transport {
         if (query.length) {
             url += '?query=' + JSON.stringify(query);
         }
-        return this.fetch(url)
-            .then(function (response) {
-                return response.json();
-            });
+        return fetch(url).then(response => response.json());
     }
 }
