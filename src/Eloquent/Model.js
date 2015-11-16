@@ -1,4 +1,3 @@
-import {omit} from 'lodash';
 import Eloquent from '../index';
 import EloquentBuilder from './Builder';
 
@@ -62,9 +61,15 @@ class Model {
      * @returns {*}
      */
     getDirty() {
-        return omit(this.getAttributes(), (value, prop) => {
-            return this.original[prop] == value;
-        });
+        let attributes = this.getAttributes();
+
+        for (let prop in attributes) {
+            if (this.original[prop] == attributes[prop]) {
+                delete attributes[prop];
+            }
+        }
+
+        return attributes;
     }
 
     /**

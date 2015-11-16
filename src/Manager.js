@@ -1,5 +1,3 @@
-import {find} from 'lodash';
-
 /**
  * The manager acts as a registry for your Model definitions.
  * You can define as many Models as you like, since they are
@@ -114,7 +112,7 @@ export default class Manager {
      * @returns {Object}
      */
     getRegistryItem(name) {
-        return find(this.registry, 'name', name);
+        return this.registry.find(item => item.name == name);
     }
 
     /**
