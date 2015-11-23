@@ -36,7 +36,7 @@ export default class EloquentBuilder extends QueryBuilder {
         if (Array.isArray(id)) {
             return this.findMany(id, columns);
         }
-        return this._call('find', id).get(columns).then(unwrapFirst);
+        return this.where(this._model.primaryKey, id).first();
     }
 
     /**
@@ -47,7 +47,7 @@ export default class EloquentBuilder extends QueryBuilder {
      * @returns {Promise}
      */
     findMany(ids, columns) {
-        return this._call('findMany', ids).get(columns);
+        return this.whereIn(this._model.primaryKey, ids).get(columns);
     }
 
     /**
@@ -158,7 +158,7 @@ export default class EloquentBuilder extends QueryBuilder {
      */
     _setModel(model) {
         this._model = model;
-        this.from(model.__proto__.constructor.endpoint);
+        this.from(model.endpoint);
     }
 };
 

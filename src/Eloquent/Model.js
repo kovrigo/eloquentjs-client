@@ -12,12 +12,21 @@ export default class Model {
      * @param attributes
      */
     constructor(attributes = {}) {
+        let modelDefinition = Object.getPrototypeOf(this).constructor;
         Object.defineProperties(this, {
             original: {
                 value: attributes
             },
             exists: {
                 value: false,
+                writable: true
+            },
+            endpoint: {
+                value: modelDefinition.endpoint,
+                writable: true
+            },
+            primaryKey: {
+                value: modelDefinition.primaryKey || 'id',
                 writable: true
             }
         });

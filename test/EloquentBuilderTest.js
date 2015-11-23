@@ -30,9 +30,18 @@ describe('EloquentBuilder', function () {
     });
 
     /** @test {EloquentBuilder#find} */
-    it('finds a model by its primary key', function () {
-        return builder.find(1).then(function (result) {
-            expect(result).to.eql(rows[0]);
+    describe('find()', function () {
+        it('finds a model by its primary key', function () {
+            return builder.find(1).then(function (result) {
+                expect(result).to.eql(rows[0]);
+            });
+        });
+
+        it('refers to the model for the primary key name', function() {
+            model.primaryKey = 'notid';
+            return builder.find(1).then(function (result) {
+                expect(transport.get.args[0][1][0]).to.eql(['where', ['notid', 1]]);
+            });
         });
     });
 
@@ -101,9 +110,9 @@ describe('EloquentBuilder', function () {
         /** @test {EloquentBuilder#_setModel} */
         /** @test {EloquentBuilder#_getModel} */
         it('has a setter and getter', function () {
-            let model = {};
-            builder._setModel(model);
-            expect(builder._getModel()).to.equal(model);
+            let differentModel = new (class extends Model {});
+            builder._setModel(differentModel);
+            expect(builder._getModel()).to.equal(differentModel);
         });
 
         it('provides the query builder with its endpoint', function () {
