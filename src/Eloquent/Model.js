@@ -1,6 +1,8 @@
 import Eloquent from '../index';
 import EloquentBuilder from './Builder';
 
+let booted = [];
+
 /**
  * Model
  */
@@ -12,7 +14,10 @@ export default class Model {
      * @param attributes
      */
     constructor(attributes = {}) {
+        this.bootIfNotBooted();
+
         let modelDefinition = Object.getPrototypeOf(this).constructor;
+
         Object.defineProperties(this, {
             original: {
                 value: attributes
@@ -34,8 +39,61 @@ export default class Model {
         this.fill(attributes);
     }
 
+    /**
+     * Boot model if not already booted.
+     *
+     * @returns {void}
+     */
     bootIfNotBooted() {
-        console.log(this.constructor.name);
+        if (booted.indexOf(this.constructor) === -1) {
+            this.constructor.boot();
+        }
+    }
+
+    /**
+     * Boot the model
+     *
+     * This happens once per model and is where we
+     * can set up the prototype, based on configuration
+     * values attached the constructor.
+     *
+     * @returns {void}
+     */
+    static boot() {
+        booted.push(this);
+
+        if (this.scopes) {
+            this._bootScopes(this.scopes);
+        }
+    }
+
+    /**
+     * Boot scopes for this model.
+     *
+     * Scopes are provided as a simple array since all we want
+     * to do is keep track of their calls in the query stack.
+     * Here we can add those named scopes as methods on our
+     * prototype, ensuring consistency with the Laravel API.
+     *
+     * @protected
+     * @param {string[]} scopes
+     * @returns {void}
+     */
+    static _bootScopes(scopes) {
+        scopes.forEach(function (scope) {
+            // Add to the prototype for access by model instances
+            Object.defineProperty(this, scope, {
+                value: function () {
+                    return this.newQuery().scope(scope, args);
+                }
+            });
+            // Add to the class for static access
+            Object.defineProperty(this.constructor, scope, {
+                value: function (...args) {
+                    return this.query().scope(scope, args);
+                }
+            });
+        }, this.prototype);
     }
 
     /**

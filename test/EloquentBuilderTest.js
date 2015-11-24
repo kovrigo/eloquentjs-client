@@ -106,9 +106,9 @@ describe('EloquentBuilder', function () {
         });
     });
 
+    /** @test {EloquentBuilder#_setModel} */
+    /** @test {EloquentBuilder#_getModel} */
     describe('model instance being queried', function () {
-        /** @test {EloquentBuilder#_setModel} */
-        /** @test {EloquentBuilder#_getModel} */
         it('has a setter and getter', function () {
             let differentModel = new (class extends Model {});
             builder._setModel(differentModel);
@@ -119,12 +119,36 @@ describe('EloquentBuilder', function () {
             builder._setModel(model);
             expect(builder.endpoint).to.equal('api');
         });
+
+        it('copies scope methods from the model to the builder to allow chaining', function () {
+            let Dog = class extends Model {};
+            Dog.scopes = ['ofBreed', 'living'];
+            builder._setModel(new Dog());
+            sinon.spy(builder, 'scope');
+
+            builder.ofBreed('terrier').living();
+
+            expect(builder.scope).to.have.been.calledTwice;
+        });
     });
 
     /** @test {EloquentBuilder#get} */
     describe('get()', function () {
         it('returns hydrated models', function () {
             return expect(builder.get()).to.eventually.eql(rows.map((row) => new Person(row)));
+        });
+    });
+
+    /** @test {EloquentBuilder#scope} */
+    describe('scope()', function () {
+        it('tracks calls to scope methods', function () {
+            let args = ['ofType', ['admin']];
+            builder.scope.apply(builder, args);
+            expect(builder.stack.pop()).to.eql(['scope', args]);
+        });
+
+        it('is chainable', function () {
+            expect(builder.scope('ofType', ['admin'])).to.equal(builder);
         });
     });
 });

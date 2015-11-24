@@ -96,4 +96,44 @@ describe('Model', function () {
             expect(Person.all()).to.equal('ALL');
         });
     });
+
+    describe('boot()', function () {
+        it('is called once per model', function () {
+            let Dog = class extends Model {};
+            let spy = sinon.spy(Dog, 'boot');
+            new Dog();
+            new Dog();
+            expect(spy).to.have.been.calledOnce;
+        });
+
+        describe('scoped method', function () {
+            let Dog;
+
+            beforeEach(function () {
+                Dog = class extends Model {};
+                Dog.scopes = ['ofBreed'];
+                Dog.boot();
+            });
+
+            it('is added to the class', function () {
+                expect(Dog.ofBreed).to.be.a('function');
+            });
+
+            it('is added to the prototype', function () {
+                let rover = new Dog({ name: 'rover' });
+                expect(rover.ofBreed).to.be.a('function');
+            });
+
+            it('returns a builder object', function () {
+                expect(Dog.ofBreed('terrier')).to.be.an.instanceOf(EloquentBuilder);
+            });
+
+            it('calls scope() on the builder', function () {
+                let spy = sinon.spy(EloquentBuilder.prototype, 'scope');
+                Dog.ofBreed('terrier');
+                expect(spy).to.have.been.calledWith('ofBreed', ['terrier']);
+            });
+        });
+    });
+
 });
