@@ -43,6 +43,20 @@ describe('Model', function () {
         });
     });
 
+    context('when a column is date', function () {
+        it('is casts to a Date object', function () {
+            let person = new Person({ created_at: '2015-11-23T12:11:03+0000'});
+            expect(person.created_at).to.be.an.instanceOf(Date);
+        });
+
+        it('can be configured on the class object', function () {
+            let Dog = class extends Model {};
+            Dog.dates = ['birthday'];
+            let buster = new Dog({ birthday: '2015-11-23T12:11:03+0000'});
+            expect(buster.birthday).to.be.an.instanceOf(Date);
+        });
+    });
+
     /** @test {Model#fill} */
     it('fills the model from an attributes object', function () {
         person.fill({ name: 'Bob' });

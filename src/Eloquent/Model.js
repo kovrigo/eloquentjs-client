@@ -33,6 +33,11 @@ export default class Model {
             primaryKey: {
                 value: modelDefinition.primaryKey || 'id',
                 writable: true
+            },
+            dates: {
+                value: (modelDefinition.dates || []).concat(
+                    'created_at', 'updated_at', 'deleted_at'
+                )
             }
         });
 
@@ -108,7 +113,9 @@ export default class Model {
      * @returns {Model}
      */
     fill(attributes) {
-        Object.assign(this, attributes);
+        for (let key in attributes) {
+            this.setAttribute(key, attributes[key]);
+        }
         return this;
     }
 
@@ -130,6 +137,10 @@ export default class Model {
      * @returns {Model}
      */
     setAttribute(key, value) {
+        if (this.dates.indexOf(key) > -1) {
+            value = new Date(value);
+        }
+
         this[key] = value;
         return this;
     }
