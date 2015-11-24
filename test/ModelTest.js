@@ -43,6 +43,12 @@ describe('Model', function () {
         });
     });
 
+    /** @test {Model#fill} */
+    it('fills the model from an attributes object', function () {
+        person.fill({ name: 'Bob' });
+        expect(person.name).to.equal('Bob');
+    });
+
     /** @test {Model#newQuery} */
     it('gets a new query builder from a model instance', function () {
         let builder = person.newQuery();
@@ -51,7 +57,7 @@ describe('Model', function () {
     });
 
     /** @test {Model#query} */
-    it('gets a new query builder from the model prototype', function () {
+    it('gets a new query builder statically', function () {
         let builder = Person.query();
         expect(builder).to.be.an.instanceOf(EloquentBuilder);
         expect(builder._getModel()).to.be.an.instanceOf(Person);

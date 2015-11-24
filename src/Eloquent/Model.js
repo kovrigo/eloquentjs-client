@@ -30,7 +30,28 @@ export default class Model {
                 writable: true
             }
         });
+
+        this.fill(attributes);
+    }
+
+    bootIfNotBooted() {
+        console.log(this.constructor.name);
+    }
+
+    /**
+     * Fill the model with an object of attributes.
+     *
+     * This is where Laravel would guard against mass assignment.
+     * While it would be possible to implement similar functionality
+     * here, the extra complexity it'd introduce doesn't seem worth it,
+     * at least for now...
+     *
+     * @param {object} attributes
+     * @returns {Model}
+     */
+    fill(attributes) {
         Object.assign(this, attributes);
+        return this;
     }
 
     /**

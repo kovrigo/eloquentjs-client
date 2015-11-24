@@ -30,7 +30,7 @@
  * let Post = manager.named('Post');
  *
  * @desc
- * Note: the default export for the laravel-eloquentjs module
+ * Note: the default export for the eloquentjs-client npm module
  * is an overloaded factory function that provides syntactic
  * sugar - you likely won't need to use the Manager directly.
  */
@@ -52,9 +52,8 @@ export default class Manager {
         this.registry = [];
 
         /**
-         * Factory function, returns the base model class
          * @protected
-         * @type {function(): Model}
+         * @type {Model}
          */
         this.baseModel = BaseModel;
     }

@@ -12,18 +12,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/parsnick/laravel-eloquentjs.git"
+    "url": "git+https://github.com/parsnick/eloquentjs-client.git"
   },
   "keywords": [
     "laravel",
-    "eloquent"
+    "eloquent",
+    "orm",
+    "activerecord"
   ],
   "author": "Nick",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/parsnick/laravel-eloquentjs/issues"
+    "url": "https://github.com/parsnick/eloquentjs-client/issues"
   },
-  "homepage": "https://github.com/parsnick/laravel-eloquentjs#readme",
+  "homepage": "https://github.com/parsnick/eloquentjs-client#readme",
   "devDependencies": {
     "babel": "^5.8.23",
     "babelify": "^6.4.0",
