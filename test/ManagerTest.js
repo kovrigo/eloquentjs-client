@@ -2,14 +2,14 @@ import {expect} from 'chai';
 import sinon from 'sinon';
 import {merge} from 'lodash';
 import Manager from '../src/Manager';
+import Model from '../src/Eloquent/Model';
 
 describe('Manager', function () {
 
     let manager;
-    let baseClass = class {};
 
     beforeEach(function () {
-        manager = new Manager(baseClass);
+        manager = new Manager(Model);
     });
 
     it('defines an Eloquent model', function () {
@@ -20,7 +20,7 @@ describe('Manager', function () {
     it('gets a previously defined model', function () {
         manager.define('Post', {});
         let Post = manager.named('Post');
-        expect(new Post()).to.be.an.instanceof(baseClass);
+        expect(new Post()).to.be.an.instanceof(Model);
     });
 
     it('applies the given properties to the returned class', function () {
@@ -34,10 +34,22 @@ describe('Manager', function () {
     });
 
     it('accepts a callback that provides the model definition', function () {
-        let callback = sinon.stub().returns('PostClass');
+        let callback = sinon.stub().returns(Model);
         manager.define('Post', callback);
-        expect(manager.named('Post')).to.equal('PostClass');
-        expect(callback).to.have.been.called;
+        expect(manager.named('Post')).to.equal(Model);
+        expect(callback).to.have.been.calledWith(sinon.match(function (value) {
+            return Model.isPrototypeOf(value);
+        }, 'Model'));
     });
 
+    it('optionally boots the returned model class', function () {
+        manager.define('Post', {});
+        let model = class extends Model {};
+        sinon.spy(model, 'boot');
+        sinon.stub(manager, 'createDefinition').returns(model);
+
+        manager.named('Post');
+
+        expect(model.boot).to.have.been.calledOnce;
+    });
 });

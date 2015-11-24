@@ -98,6 +98,7 @@ export default class Manager {
 
         if ( ! registration.definition) {
             registration.definition = this.createDefinition(registration.factory);
+            registration.definition.boot();
         }
 
         return registration.definition;
