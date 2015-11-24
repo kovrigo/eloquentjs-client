@@ -83,7 +83,7 @@ export default class Model {
         scopes.forEach(function (scope) {
             // Add to the prototype for access by model instances
             Object.defineProperty(this, scope, {
-                value: function () {
+                value: function (...args) {
                     return this.newQuery().scope(scope, args);
                 }
             });

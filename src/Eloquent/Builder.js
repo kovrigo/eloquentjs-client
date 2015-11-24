@@ -143,12 +143,16 @@ export default class EloquentBuilder extends QueryBuilder {
     /**
      * Add a scope call to the query.
      *
-     * @param {string} name
-     * @param {*[]} args
+     * @param {string} scopeName
+     * @param {*[]} scopeArgs
      * @returns {EloquentBuilder}
      */
-    scope(name, args) {
-        this._call('scope', [name, args]);
+    scope(scopeName, scopeArgs) {
+        let args = [scopeName];
+        if (scopeArgs) {
+            args.push(scopeArgs);
+        }
+        this._call('scope', args);
         return this;
     }
 
