@@ -6,7 +6,7 @@ import 'isomorphic-fetch';
 export default class Transport {
 
     /**
-     * Execute a query.
+     * Make a GET request.
      *
      * @param {string} endpoint
      * @param {Array} query
@@ -18,5 +18,23 @@ export default class Transport {
             url += '?query=' + JSON.stringify(query);
         }
         return fetch(url).then(response => response.json());
+    }
+
+    /**
+     * Make a POST request.
+     *
+     * @param {string} endpoint
+     * @param {Object} attributes
+     * @returns {Promise}
+     */
+    post(endpoint, attributes = []) {
+        return fetch(endpoint, {
+            method: 'post',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(attributes)
+        }).then(response => response.json());
     }
 };

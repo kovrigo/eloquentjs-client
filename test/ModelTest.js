@@ -6,7 +6,7 @@ import EloquentBuilder from '../src/Eloquent/Builder';
 /** @test {Model} */
 describe('Model', function () {
 
-    let Person = class extends Model {};
+    let Person;
     let person;
     let attributes = {
         name: 'Dave',
@@ -14,6 +14,7 @@ describe('Model', function () {
     };
 
     beforeEach(function () {
+        Person = class extends Model {};
         person = new Person(attributes);
     });
 
@@ -148,6 +149,66 @@ describe('Model', function () {
                 expect(spy).to.have.been.calledWith('ofBreed', ['terrier']);
             });
         });
+    });
+
+    describe('create()', function () {
+        it('news up an instance with the given attributes and saves it', function () {
+            let flibble = { name: 'Flibble', created_at: Date.now() };
+            let stub = sinon.stub(Person.prototype, 'save').resolves(flibble);
+            let saveRequest = Person.create({ name: 'Flibble' });
+            expect(stub).to.have.been.called;
+            return expect(saveRequest).to.eventually.equal(flibble);
+        });
+    });
+
+    describe('save()', function () {
+
+        let builder;
+
+        beforeEach(function stubBuilder() {
+            builder = Person.query();
+            sinon.stub(Person.prototype, 'newQuery').returns(builder);
+        });
+
+        context('on a non-existing model', function () {
+
+            let model;
+
+            beforeEach(function stubInsert() {
+                sinon.stub(builder, 'insert').resolves({ id: 2, name: 'Cat' });
+                model = new Person({ name: 'Cat' });
+            });
+
+            it('calls insert() on the query builder', function () {
+                model.save();
+                expect(builder.insert).to.have.been.calledWith(model.getAttributes());
+            });
+
+            it('updates the instance with the new attributes from the server', function () {
+                return model.save().then(() => expect(model.id).to.equal(2));
+            });
+        });
+
+        xcontext('on an existing model', function () {
+
+            let model;
+
+            beforeEach(function stubUpdate() {
+                sinon.stub(builder, 'update').resolves({ id: 2, name: 'Cat', updated_at: Date.now() });
+                model = new Person({ name: 'Cat' });
+                model.exists = true;
+            });
+
+            it('calls update() on the query builder', function () {
+                model.save();
+                expect(builder.update).to.have.been.calledWith(model.getAttributes());
+            });
+
+            xit('updates the instance with the new attributes from the server', function () {
+                return model.save().then(() => expect(model.id).to.equal(2));
+            });
+        });
+
     });
 
 });

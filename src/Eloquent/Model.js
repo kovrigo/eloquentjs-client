@@ -20,7 +20,7 @@ export default class Model {
 
         Object.defineProperties(this, {
             original: {
-                value: attributes
+                writable: true
             },
             exists: {
                 value: false,
@@ -42,6 +42,8 @@ export default class Model {
         });
 
         this.fill(attributes);
+
+        this._syncOriginal();
     }
 
     /**
@@ -119,6 +121,10 @@ export default class Model {
         return this;
     }
 
+    _syncOriginal() {
+        this.original = this.getAttributes();
+    }
+
     /**
      * Get the named attribute.
      *
@@ -174,6 +180,16 @@ export default class Model {
     /**
      * Get a new Eloquent query builder for this model.
      *
+     * @static
+     * @returns {EloquentBuilder}
+     */
+    static query() {
+        return (new this()).newQuery();
+    }
+
+    /**
+     * Get a new Eloquent query builder for this model.
+     *
      * @returns {EloquentBuilder}
      */
     newQuery() {
@@ -206,13 +222,26 @@ export default class Model {
     }
 
     /**
-     * Get a new Eloquent query builder for this model.
+     * Save a new model and eventually return the instance.
      *
-     * @static
-     * @returns {EloquentBuilder}
+     * @param {Object} attributes
+     * @returns {Promise}
      */
-    static query() {
-        return (new this()).newQuery();
+    static create(attributes = {}) {
+        return (new this(attributes)).save();
+    }
+
+    /**
+     * Save the model to the database.
+     *
+     * @returns {Promise}
+     */
+    save() {
+        return this.newQuery()
+            .insert(this.getAttributes())
+            .then(newAttributes => {
+                return this.fill(newAttributes) && this._syncOriginal();
+            });
     }
 
     /**

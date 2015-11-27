@@ -1,6 +1,7 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
 import QueryBuilder from '../src/Query/Builder';
+import Transport from '../src/Query/Transport';
 
 /** @test {QueryBuilder} */
 describe('QueryBuilder', function () {
@@ -8,7 +9,7 @@ describe('QueryBuilder', function () {
     let query;
 
     beforeEach(function () {
-        query = new QueryBuilder({ get: sinon.stub() });
+        query = new QueryBuilder(new Transport());
     });
 
     describe('constructor', function () {
@@ -30,7 +31,7 @@ describe('QueryBuilder', function () {
     /** @test {QueryBuilder#get} */
     describe('get()', function () {
         it('throws if no endpoint is set', function () {
-            expect(query.get).to.throw(Error);
+            expect(() => query.get()).to.throw(Error);
         });
         it('calls the transporter with the endpoint and query stack', function () {
             query.transport.get = sinon.spy();
@@ -41,7 +42,7 @@ describe('QueryBuilder', function () {
         });
     });
 
-    // The remaining methods have no implementation beyond simply
+    // These methods have no implementation beyond simply
     // tracking the order of their calls and their arguments.
     let methods = [
         'select', 'addSelect',
@@ -75,6 +76,15 @@ describe('QueryBuilder', function () {
         });
     });
 
+    describe('insert()', function () {
+        it('uses transport to POST the given attributes to the endpoint', function () {
+            let attributes = { name: 'Frank' };
+            sinon.spy(query.transport, 'post');
+            query.from('api/people').insert(attributes);
+            expect(query.transport.post).to.have.been.calledWith('api/people', attributes);
+        });
+    });
+
 });
 
 function getTestArgs(method)
@@ -94,5 +104,4 @@ function getTestArgs(method)
         default:
             return ['test', 'arguments'];
     }
-
 }

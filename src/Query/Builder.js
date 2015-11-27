@@ -452,10 +452,30 @@ export default class QueryBuilder {
             this.select(columns);
         }
 
+        return this.transport.get(this._getEndpoint(), this.stack);
+    }
+
+    /**
+     * Insert a new record into the database.
+     *
+     * @param values
+     * @returns {Promise}
+     */
+    insert(values) {
+        return this.transport.post(this._getEndpoint(), values);
+    }
+
+    /**
+     *
+     * @returns {string|null}
+     * @private
+     * @throws {Error} when endpoint is not set
+     */
+    _getEndpoint() {
         if ( ! this.endpoint) {
             throw new Error('Attempted to execute query without an endpoint.');
         }
 
-        return this.transport.get(this.endpoint, this.stack);
+        return this.endpoint;
     }
 }
