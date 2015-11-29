@@ -16,6 +16,7 @@ describe('Model', function () {
     beforeEach(function () {
         Person = class extends Model {};
         person = new Person(attributes);
+        person.exists = true;
     });
 
     it('exposes attributes as public properties', function () {
@@ -224,6 +225,17 @@ describe('Model', function () {
         person.update({ name: 'Delia' });
         expect(person.save).to.have.been.called;
         expect(person.name).to.equal('Delia');
+    });
+
+    /** @test {Model#delete} */
+    it('deletes the model', function() {
+        let builder = person.newQuery();
+        sinon.stub(person, 'newQuery').returns(builder);
+        sinon.stub(builder, 'delete').resolves(true);
+        return person.delete().then(response => {
+            expect(person.exists).to.equal(false);
+            expect(builder.delete).to.have.been.called;
+        });
     });
 
 });

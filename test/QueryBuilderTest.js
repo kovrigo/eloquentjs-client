@@ -91,10 +91,23 @@ describe('QueryBuilder', function () {
             query.from('api/people').update({ active: 0 });
             expect(query.transport.put).to.have.been.calledWith('api/people/*', { active: 0 });
         });
-        it('also passes the query stack to the transport', function () {
+        it('passes the query stack to the transport', function () {
             sinon.spy(query.transport, 'put');
             query.from('api/people').where('name', 'Francis').update({});
             expect(query.transport.put).to.have.been.calledWith('api/people/*', {}, query.stack);
+        });
+    });
+
+    describe('delete()', function() {
+        it('uses transport to make a DELETE request to a faked RESTful URL', function() {
+            sinon.spy(query.transport, 'delete');
+            query.from('api/people').delete();
+            expect(query.transport.delete).to.have.been.calledWith('api/people/*');
+        });
+        it('passes the query stack to the transport', function () {
+            sinon.spy(query.transport, 'delete');
+            query.from('api/people').where('name', 'Francis').delete();
+            expect(query.transport.delete).to.have.been.calledWith('api/people/*', query.stack);
         });
     });
 });

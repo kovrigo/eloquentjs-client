@@ -268,6 +268,17 @@ export default class Model {
     }
 
     /**
+     * Delete the model.
+     *
+     * @return {Promise}
+     */
+    delete() {
+        return this.newQuery().where('id', this.getKey()).delete().then(success => {
+            if (success) this.exists = false;
+        })
+    }
+
+    /**
      * Fetch all models from this endpoint.
      *
      * @static

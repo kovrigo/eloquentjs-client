@@ -491,6 +491,15 @@ export default class QueryBuilder {
     }
 
     /**
+     * Execute the query as a "delete" statement.
+     *
+     * @returns {Promise}
+     */
+    delete() {
+        return this.transport.delete(this.getEndpoint('*'), this.stack);
+    }
+
+    /**
      * Get the endpoint for the query.
      *
      * @param {string} [key] primary key which, if given, is appended
