@@ -8,33 +8,71 @@ export default class Transport {
     /**
      * Make a GET request.
      *
-     * @param {string} endpoint
+     * @param {string} url
      * @param {Array} query
      * @returns {Promise}
      */
-    get(endpoint, query = []) {
-        let url = endpoint;
-        if (query.length) {
-            url += '?query=' + JSON.stringify(query);
-        }
-        return fetch(url).then(response => response.json());
+    get(url, query = []) {
+        return fetch(appendQueryString(url, query)).then(readJson);
     }
 
     /**
      * Make a POST request.
      *
-     * @param {string} endpoint
-     * @param {Object} attributes
+     * @param {string} url
+     * @param {Object} data
      * @returns {Promise}
      */
-    post(endpoint, attributes = []) {
-        return fetch(endpoint, {
-            method: 'post',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(attributes)
-        }).then(response => response.json());
+    post(url, data = {}) {
+        return sendJson(url, 'post', data).then(readJson);
+    }
+
+    /**
+     * Make a PUT request.
+     *
+     * @param {string} url
+     * @param {Object} data
+     * @param {Array} query
+     * @returns {Promise}
+     */
+    put(url, data, query) {
+        return sendJson(appendQueryString(url, query), 'put', data)
+            .then(readJson);
+    }
+
+    /**
+     * Make a DELETE request.
+     *
+     * @param {string} url
+     * @param {Array} [query]
+     * @returns {Promise}
+     */
+    delete(url, query = []) {
+        return fetch(appendQueryString(url, query), { method: 'delete' })
+            .then(response => response.status === 200);
     }
 };
+
+function appendQueryString(url, stack)
+{
+    if (stack && stack.length) url += '?query='+JSON.stringify(stack);
+
+    return url;
+}
+
+function sendJson(url, method, data)
+{
+    return fetch(url, {
+        method,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    });
+}
+
+function readJson(response)
+{
+    return response.json();
+}
