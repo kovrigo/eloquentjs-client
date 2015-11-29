@@ -16,7 +16,8 @@ describe('EloquentBuilder', function () {
 
     beforeEach(function () {
         // Create the model associated with this builder
-        model = new Person();
+        model = new Person({ id: 5 });
+        model.exists = true;
 
         // Stub out the http call
         rows = [row(1, 'first'), row(2, 'second'), row(3, 'third')];
@@ -132,13 +133,6 @@ describe('EloquentBuilder', function () {
         });
     });
 
-    /** @test {EloquentBuilder#get} */
-    describe('get()', function () {
-        it('returns hydrated models', function () {
-            return expect(builder.get()).to.eventually.eql(rows.map((row) => new Person(row)));
-        });
-    });
-
     /** @test {EloquentBuilder#scope} */
     describe('scope()', function () {
         it('tracks calls to scope methods', function () {
@@ -149,6 +143,13 @@ describe('EloquentBuilder', function () {
 
         it('is chainable', function () {
             expect(builder.scope('ofType', ['admin'])).to.equal(builder);
+        });
+    });
+
+    /** @test {EloquentBuilder#get} */
+    describe('get()', function () {
+        it('returns hydrated models', function () {
+            return expect(builder.get()).to.eventually.eql(rows.map((row) => new Person(row)));
         });
     });
 });

@@ -36,9 +36,9 @@ describe('QueryBuilder', function () {
         it('calls the transporter with the endpoint and query stack', function () {
             query.transport.get = sinon.spy();
 
-            query.from('/api/posts').get();
+            query.from('/api/posts').where('archived', 0).get();
 
-            expect(query.transport.get).to.have.been.calledWith('/api/posts');
+            expect(query.transport.get).to.have.been.calledWith('/api/posts', [["where", ["archived", 0]]]);
         });
     });
 
@@ -85,6 +85,18 @@ describe('QueryBuilder', function () {
         });
     });
 
+    describe('update()', function() {
+        it('uses transport to make a PUT request to a faked RESTful URL', function () {
+            sinon.spy(query.transport, 'put');
+            query.from('api/people').update({ active: 0 });
+            expect(query.transport.put).to.have.been.calledWith('api/people/*', { active: 0 });
+        });
+        it('also passes the query stack to the transport', function () {
+            sinon.spy(query.transport, 'put');
+            query.from('api/people').where('name', 'Francis').update({});
+            expect(query.transport.put).to.have.been.calledWith('api/people/*', {}, query.stack);
+        });
+    });
 });
 
 function getTestArgs(method)

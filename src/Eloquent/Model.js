@@ -237,11 +237,34 @@ export default class Model {
      * @returns {Promise}
      */
     save() {
-        return this.newQuery()
-            .insert(this.getAttributes())
-            .then(newAttributes => {
-                return this.fill(newAttributes) && this._syncOriginal();
-            });
+        let query = this.newQuery();
+        let request;
+
+        if (this.exists) {
+            request = query.from(this.endpoint+'/'+this.getKey()).update(this.getAttributes());
+        } else {
+            request = query.insert(this.getAttributes());
+        }
+
+        return request.then(newAttributes => {
+            return this.fill(newAttributes) && this._syncOriginal();
+        });
+    }
+
+    /**
+     * Update the model.
+     *
+     * @param  {Object} attributes
+     * @returns {Promise}
+     */
+    update(attributes) {
+        if ( ! this.exists) {
+            return this.newQuery().update(attributes);
+        }
+
+        this.fill(attributes);
+
+        return this.save();
     }
 
     /**
@@ -253,6 +276,15 @@ export default class Model {
      */
     static all(columns) {
         return (new this()).newQuery().get(columns);
+    }
+
+    /**
+     * Get the primary key for this model.
+     *
+     * @returns {Number|undefined}
+     */
+    getKey() {
+        return this[this.primaryKey];
     }
 }
 

@@ -113,6 +113,7 @@ describe('Model', function () {
     });
 
     describe('boot()', function () {
+        /** @test {Model#boot} */
         it('is called once per model', function () {
             let Dog = class extends Model {};
             let spy = sinon.spy(Dog, 'boot');
@@ -152,15 +153,15 @@ describe('Model', function () {
     });
 
     describe('create()', function () {
+        /** @test {Model#create} */
         it('news up an instance with the given attributes and saves it', function () {
-            let flibble = { name: 'Flibble', created_at: Date.now() };
-            let stub = sinon.stub(Person.prototype, 'save').resolves(flibble);
+            let stub = sinon.stub(Person.prototype, 'save');
             let saveRequest = Person.create({ name: 'Flibble' });
             expect(stub).to.have.been.called;
-            return expect(saveRequest).to.eventually.equal(flibble);
         });
     });
 
+    /** @test {Model#save} */
     describe('save()', function () {
 
         let builder;
@@ -189,7 +190,7 @@ describe('Model', function () {
             });
         });
 
-        xcontext('on an existing model', function () {
+        context('on an existing model', function () {
 
             let model;
 
@@ -204,11 +205,25 @@ describe('Model', function () {
                 expect(builder.update).to.have.been.calledWith(model.getAttributes());
             });
 
-            xit('updates the instance with the new attributes from the server', function () {
+            it('uses restful convention for the endpoint', function() {
+                model.endpoint = 'api/people';
+                model.id = 2;
+                model.save();
+                expect(builder.endpoint).to.equal('api/people/2');
+            });
+
+            it('updates the instance with the new attributes from the server', function () {
                 return model.save().then(() => expect(model.id).to.equal(2));
             });
         });
+    });
 
+    /** @test {Model#update} */
+    it('updates the model attributes and saves it', function() {
+        sinon.stub(person, 'save');
+        person.update({ name: 'Delia' });
+        expect(person.save).to.have.been.called;
+        expect(person.name).to.equal('Delia');
     });
 
 });
