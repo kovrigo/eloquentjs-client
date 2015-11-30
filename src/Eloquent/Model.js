@@ -121,6 +121,11 @@ export default class Model {
         return this;
     }
 
+    /**
+     * Sync the original attributes with the current.
+     *
+     * @return {void}
+     */
     _syncOriginal() {
         this.original = this.getAttributes();
     }
