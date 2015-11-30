@@ -69,6 +69,8 @@ export default class Model {
     static boot() {
         booted.push(this);
 
+        this.events = {};
+
         if (this.scopes) {
             this._bootScopes(this.scopes);
         }
@@ -82,7 +84,7 @@ export default class Model {
      * Here we can add those named scopes as methods on our
      * prototype, ensuring consistency with the Laravel API.
      *
-     * @protected
+     * @access protected
      * @param {string[]} scopes
      * @returns {void}
      */
@@ -124,6 +126,7 @@ export default class Model {
     /**
      * Sync the original attributes with the current.
      *
+     * @access protected
      * @return {void}
      */
     _syncOriginal() {
@@ -233,7 +236,8 @@ export default class Model {
      * @returns {Promise}
      */
     static create(attributes = {}) {
-        return (new this(attributes)).save();
+        let instance = new this(attributes);
+        return instance.save().then(success => instance);
     }
 
     /**
@@ -242,18 +246,62 @@ export default class Model {
      * @returns {Promise}
      */
     save() {
-        let query = this.newQuery();
         let request;
 
+        if (this.triggerEvent('saving') === false) {
+            return Promise.reject('saving.cancelled');
+        }
+
         if (this.exists) {
-            request = query.from(this.endpoint+'/'+this.getKey()).update(this.getAttributes());
+            request = this._performUpdate();
         } else {
-            request = query.insert(this.getAttributes());
+            request = this._performInsert();
         }
 
         return request.then(newAttributes => {
+            this.exists = true;
+            this.triggerEvent('saved', false);
             return this.fill(newAttributes) && this._syncOriginal();
         });
+    }
+
+    /**
+     * Perform an insert operation.
+     *
+     * @access protected
+     * @return {Promise}
+     */
+    _performInsert() {
+        if (this.triggerEvent('creating') === false) {
+            return Promise.reject('creating.cancelled');
+        }
+
+        return this.newQuery()
+            .insert(this.getAttributes())
+            .then(response => {
+                this.triggerEvent('created', false);
+                return response;
+            });
+    }
+
+    /**
+     * Perform an update operation.
+     *
+     * @access protected
+     * @return {Promise}
+     */
+    _performUpdate() {
+        if (this.triggerEvent('updating') === false) {
+            return Promise.reject('updating.cancelled');
+        }
+
+        return this.newQuery()
+            .from(this.endpoint+'/'+this.getKey())
+            .update(this.getAttributes())
+            .then(response => {
+                this.triggerEvent('updated', false);
+                return response;
+            });
     }
 
     /**
@@ -263,7 +311,7 @@ export default class Model {
      * @returns {Promise}
      */
     update(attributes) {
-        if ( ! this.exists) {
+        if ( ! this.exists) { // provides shortcut to an update on the query builder
             return this.newQuery().update(attributes);
         }
 
@@ -278,9 +326,20 @@ export default class Model {
      * @return {Promise}
      */
     delete() {
-        return this.newQuery().where('id', this.getKey()).delete().then(success => {
-            if (success) this.exists = false;
-        })
+        if (this.triggerEvent('deleting') === false) {
+            return Promise.reject('deleting.cancelled');
+        }
+
+        return this.newQuery()
+            .where('id', this.getKey())
+            .delete()
+            .then(success => {
+                if (success) {
+                    this.exists = false;
+                }
+                this.triggerEvent('deleted', false);
+                return success;
+            });
     }
 
     /**
@@ -301,6 +360,116 @@ export default class Model {
      */
     getKey() {
         return this[this.primaryKey];
+    }
+
+    /**
+     * Register a 'creating' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static creating(callback) {
+        this.registerEventHandler('creating', callback);
+    }
+
+    /**
+     * Register a 'created' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static created(callback) {
+        this.registerEventHandler('created', callback);
+    }
+
+    /**
+     * Register a 'updating' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static updating(callback) {
+        this.registerEventHandler('updating', callback);
+    }
+
+    /**
+     * Register a 'updated' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static updated(callback) {
+        this.registerEventHandler('updated', callback);
+    }
+
+    /**
+     * Register a 'saving' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static saving(callback) {
+        this.registerEventHandler('saving', callback);
+    }
+
+    /**
+     * Register a 'saved' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static saved(callback) {
+        this.registerEventHandler('saved', callback);
+    }
+
+    /**
+     * Register a 'deleting' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static deleting(callback) {
+        this.registerEventHandler('deleting', callback);
+    }
+
+    /**
+     * Register a 'deleted' event handler.
+     *
+     * @param  {Function} callback
+     * @return {void}
+     */
+    static deleted(callback) {
+        this.registerEventHandler('deleted', callback);
+    }
+
+    /**
+     * Register a handler for the named event.
+     *
+     * @param  {string} name
+     * @param  {Function} handler
+     * @return {void}
+     */
+    static registerEventHandler(name, handler) {
+        if ( ! this.events[name]) this.events[name] = [];
+        this.events[name].push(handler);
+    }
+
+    /**
+     * Trigger a model event.
+     *
+     * @param  {string}  name
+     * @param  {Boolean} halt stop calling observers when one returns false
+     * @return {void}
+     */
+    triggerEvent(name, halt = true) {
+        let events = this.constructor.events;
+
+        for (let i = 0, length = (events[name] || []).length; i < length; ++i) {
+            let response = events[name][i](this);
+            if (halt && typeof response !== 'undefined') {
+                return response;
+            }
+        }
     }
 }
 

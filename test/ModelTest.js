@@ -156,9 +156,10 @@ describe('Model', function () {
     describe('create()', function () {
         /** @test {Model#create} */
         it('news up an instance with the given attributes and saves it', function () {
-            let stub = sinon.stub(Person.prototype, 'save');
+            let stub = sinon.stub(Person.prototype, 'save').resolves();
             let saveRequest = Person.create({ name: 'Flibble' });
             expect(stub).to.have.been.called;
+            return expect(saveRequest).to.eventually.be.an.instanceOf(Person);
         });
     });
 
@@ -238,4 +239,174 @@ describe('Model', function () {
         });
     });
 
+    describe('eventing', function() {
+        [
+            'creating', 'created', 'updating', 'updated',
+            'saving', 'saved', 'deleting', 'deleted'
+        ].forEach(observable => {
+            it(`registers a ${observable} event handler`, function() {
+                let handler = function () {};
+                Person[observable](handler);
+                expect(Person.events[observable]).to.contain(handler);
+            });
+        })
+
+        let builder;
+
+        beforeEach(() => {
+            builder = stubNewQuery(Person.prototype);
+            builder.insert = sinon.stub().resolves();
+            builder.update = sinon.stub().resolves();
+            builder.delete = sinon.stub().resolves();
+        });
+
+        context('when a new model is created', function () {
+
+            it('fires the creating event beforehand', function() {
+                let observer = sinon.spy();
+                Person.creating(observer);
+
+                Person.create({ name: 'Dave' });
+
+                expect(observer).to.have.been.called;
+                expect(observer.args[0][0]).to.be.an.instanceOf(Person);
+                expect(observer.args[0][0].exists).to.equal(false);
+            });
+
+            it('cancels the creation if event handler returns false', function() {
+                let observer = sinon.stub().returns(false);
+                Person.creating(observer);
+
+                let request = Person.create({ name: 'Dave' });
+
+                expect(builder.insert).not.to.have.been.called;
+                expect(observer.args[0][0].exists).to.equal(false);
+                return expect(request).to.eventually.be.rejectedWith('cancelled');
+            });
+
+            it('can have any number of observers', function() {
+                let observer1 = sinon.spy();
+                let observer2 = sinon.spy();
+                Person.creating(observer1);
+                Person.creating(observer2);
+
+                Person.create({ name: 'Dave' });
+
+                expect(observer1).to.have.been.called.once;
+                expect(observer2).to.have.been.called.once;
+            });
+
+            it('fires the created event afterwards', function() {
+                let observer = sinon.spy();
+                Person.created(observer);
+
+                let request = Person.create({ name: 'Dave' });
+
+                expect(observer).not.to.have.been.called; // yet
+                return request.then(person => {
+                    expect(person.exists).to.be.true;
+                    expect(observer).to.have.been.called.once;
+                    expect(observer.args[0][0]).to.be.an.instanceOf(Person);
+                })
+            });
+        });
+
+        context('whenever a model is saved', function () {
+
+            it('fires the saving event beforehand', function() {
+                let observer = sinon.spy();
+                let person = new Person({ name: 'Dave' });
+                Person.saving(observer);
+
+                person.save();
+
+                expect(observer).to.have.been.called;
+                expect(observer.args[0][0]).to.equal(person);
+                expect(observer.args[0][0].exists).to.equal(false);
+            });
+
+            it('fires the saved event afterwards', function() {
+                let observer = sinon.spy();
+                let person = new Person({ name: 'Dave' });
+                Person.saved(observer);
+
+                return person.save().then(success => {
+                    expect(observer).to.have.been.called;
+                    expect(observer.args[0][0]).to.equal(person);
+                    expect(observer.args[0][0].exists).to.equal(true);
+                })
+            });
+
+        });
+
+        context('when a model is updated', function () {
+
+            let person;
+
+            beforeEach(() => {
+                person = new Person({ name: 'Dave' });
+                person.exists = true;
+            })
+
+            it('fires the updating event beforehand', function() {
+                let observer = sinon.spy();
+                Person.updating(observer);
+
+                person.update({ name: 'Not Dave' });
+
+                expect(observer).to.have.been.called;
+                expect(observer.args[0][0]).to.equal(person);
+            });
+
+            it('fires the updated event afterwards', function() {
+                let observer = sinon.spy();
+                Person.updated(observer);
+
+                return person.update({ name: 'Not Dave' }).then(success => {
+                    expect(observer).to.have.been.called;
+                    expect(observer.args[0][0]).to.equal(person);
+                    expect(observer.args[0][0].exists).to.equal(true);
+                })
+            });
+        });
+
+        context('when a model is deleted', function () {
+
+            let person;
+
+            beforeEach(() => {
+                person = new Person({ name: 'Dave' });
+                person.exists = true;
+            })
+
+            it('fires the deleting event beforehand', function() {
+                let observer = sinon.spy();
+                Person.deleting(observer);
+
+                person.delete();
+
+                expect(observer).to.have.been.called;
+                expect(observer.args[0][0]).to.equal(person);
+            });
+
+            it('fires the deleted event afterwards', function() {
+                let observer = sinon.spy();
+                Person.deleted(observer);
+                builder.delete.resolves(true);
+
+                return person.delete().then(success => {
+                    expect(observer).to.have.been.called;
+                    expect(observer.args[0][0]).to.equal(person);
+                    expect(observer.args[0][0].exists).to.equal(false);
+                })
+            });
+        });
+    });
 });
+
+function stubNewQuery(model)
+{
+    let builder = model.newQuery();
+    sinon.stub(model, 'newQuery').returns(builder);
+    return builder;
+}
