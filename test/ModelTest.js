@@ -57,6 +57,18 @@ describe('Model', function () {
             let buster = new Dog({ birthday: '2015-11-23T12:11:03+0000'});
             expect(buster.birthday).to.be.an.instanceOf(Date);
         });
+
+        it('is cloned', function() {
+            let person = new Person({ created_at: '2015-11-23T12:11:03+0000'});
+            person.created_at.setFullYear(1999);
+            expect(person.created_at).not.to.equal(person.original.created_at);
+        });
+
+        it('is cast to a UNIX timestamp when converted to JSON', function() {
+            let person = new Person({ created_at: '2015-11-23T12:11:03+0000'});
+            let asJSON = JSON.stringify(person);
+            expect(JSON.parse(asJSON).created_at).to.be.a('number');
+        });
     });
 
     /** @test {Model#fill} */
@@ -204,14 +216,7 @@ describe('Model', function () {
 
             it('calls update() on the query builder', function () {
                 model.save();
-                expect(builder.update).to.have.been.calledWith(model.getAttributes());
-            });
-
-            it('uses restful convention for the endpoint', function() {
-                model.endpoint = 'api/people';
-                model.id = 2;
-                model.save();
-                expect(builder.endpoint).to.equal('api/people/2');
+                expect(builder.update).to.have.been.calledWith(model.getDirty());
             });
 
             it('updates the instance with the new attributes from the server', function () {

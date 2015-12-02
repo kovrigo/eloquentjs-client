@@ -153,6 +153,7 @@ export default class Model {
     setAttribute(key, value) {
         if (this.dates.indexOf(key) > -1) {
             value = new Date(value);
+            value.toJSON = asUnixTimestamp;
         }
 
         this[key] = value;
@@ -165,7 +166,19 @@ export default class Model {
      * @returns {*}
      */
     getAttributes() {
-        return Object.assign({}, this);
+        let cloned = Object.assign({}, this);
+
+        // We want to return a copy of the attributes rather than references
+        // back to the original values. Strictly we should account for all
+        // non-primitives but for now we'll just do the date objects.
+        for (var prop in cloned) {
+            if (this.dates.indexOf(prop) > -1) {
+                cloned[prop] = new Date(this[prop]);
+                cloned[prop].toJSON = asUnixTimestamp;
+            }
+        }
+
+        return cloned;
     }
 
     /**
@@ -177,7 +190,7 @@ export default class Model {
         let attributes = this.getAttributes();
 
         for (let prop in attributes) {
-            if (this.original[prop] == attributes[prop]) {
+            if (this.original[prop].valueOf() === attributes[prop].valueOf()) {
                 delete attributes[prop];
             }
         }
@@ -296,8 +309,7 @@ export default class Model {
         }
 
         return this.newQuery()
-            .from(this.endpoint+'/'+this.getKey())
-            .update(this.getAttributes())
+            .update(this.getDirty())
             .then(response => {
                 this.triggerEvent('updated', false);
                 return response;
@@ -515,4 +527,9 @@ function getMethods(obj)
             && typeof obj.prototype[name] === 'function'
         )
     });
+}
+
+function asUnixTimestamp()
+{
+    return Math.round(this.valueOf() / 1000);
 }
