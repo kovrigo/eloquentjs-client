@@ -13,7 +13,7 @@ export default class Transport {
      * @returns {Promise}
      */
     get(url, query = []) {
-        return fetch(appendQueryString(url, query)).then(readJson);
+        return fetch(buildUrl(url, query), getInit()).then(readJson);
     }
 
     /**
@@ -24,7 +24,7 @@ export default class Transport {
      * @returns {Promise}
      */
     post(url, data = {}) {
-        return sendJson(url, 'post', data).then(readJson);
+        return fetch(url, getInit('post', data)).then(readJson);
     }
 
     /**
@@ -36,8 +36,7 @@ export default class Transport {
      * @returns {Promise}
      */
     put(url, data, query) {
-        return sendJson(appendQueryString(url, query), 'put', data)
-            .then(readJson);
+        return fetch(buildUrl(url, query), getInit('put', data)).then(readJson);
     }
 
     /**
@@ -48,31 +47,50 @@ export default class Transport {
      * @returns {Promise}
      */
     delete(url, query = []) {
-        return fetch(appendQueryString(url, query), { method: 'delete' })
+        return fetch(buildUrl(url, query), getInit('delete'))
             .then(response => response.status === 200);
     }
 };
 
-function appendQueryString(url, stack)
+function buildUrl(url, stack)
 {
-    if (stack && stack.length) url += '?query='+JSON.stringify(stack);
+    if (stack && stack.length) {
+        url += '?query='+JSON.stringify(stack);
+    }
 
     return url;
 }
 
-function sendJson(url, method, data)
+function getInit(method, data, options)
 {
-    return fetch(url, {
-        method,
+    let defaults = {
+        credentials: 'same-origin', // to send our session cookie
         headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-    });
+            'X-XSRF-TOKEN': getCsrfToken()
+        }
+    };
+
+    if (method) {
+        defaults.method = method;
+    }
+
+    if (data) {
+        defaults.headers['Content-Type'] = 'application/json';
+        defaults.body = JSON.stringify(data);
+    }
+
+    return Object.assign(defaults, options || {});
 }
 
 function readJson(response)
 {
     return response.json();
+}
+
+function getCsrfToken()
+{
+    if (typeof document === 'undefined') return;
+
+    return decodeURIComponent((document.cookie.match('(^|; )XSRF-TOKEN=([^;]*)') || 0)[2]);
 }
