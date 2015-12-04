@@ -117,8 +117,13 @@ describe('EloquentBuilder', function () {
         });
 
         it('provides the query builder with its endpoint', function () {
-            builder._setModel(model);
+            builder._setModel(new Person());
             expect(builder.endpoint).to.equal('api');
+        });
+
+        it('uses RESTful convention for endpoint when model already exists', function() {
+            builder._setModel(new Person({ id: 6 }));
+            expect(builder.endpoint).to.equal('api/6');
         });
 
         it('copies scope methods from the model to the builder to allow chaining', function () {

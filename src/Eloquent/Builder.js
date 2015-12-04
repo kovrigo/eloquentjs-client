@@ -173,9 +173,10 @@ export default class EloquentBuilder extends QueryBuilder {
      * @param {Model} model
      */
     _setModel(model) {
-        this._model = model;
+        let key = model.getKey();
 
-        this.from(model.endpoint);
+        this._model = model;
+        this.from(key ? model.endpoint+'/'+key : model.endpoint);
 
         // Laravel uses the PHP __call magic to refer back to the
         // underlying model instance to handle any scope calls.
