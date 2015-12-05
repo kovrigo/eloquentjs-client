@@ -468,26 +468,11 @@ export default class QueryBuilder {
     /**
      * Execute the query as an "update" statement.
      *
-     * There are two ways of running an update - on an existing
-     * model, e.g. `post.update()`, or via the query builder, e.g.
-     * `Post.where(...).update()`.
-     *
-     * The former is straightforward to implement. We can simply set
-     * up our RESTful controller in Laravel and make a PUT request to
-     * /resource/{id}. The latter is more complex because we don't have
-     * an ID.
-     *
-     * To support this, we'll deviate from a standard REST API and
-     * allow the use of `*` in place of the ID to refer to all models.
-     * The various query clauses can then be sent to the server in
-     * just the same way as we would do for a GET, i.e. in URL's query
-     * string.
-     *
      * @param {Object} values
      * @returns {Promise}
      */
     update(values) {
-        return this.transport.put(this.getEndpoint('*'), values, this.stack);
+        return this.transport.put(this.getEndpoint(), values, this.stack);
     }
 
     /**
@@ -496,14 +481,13 @@ export default class QueryBuilder {
      * @returns {Promise}
      */
     delete() {
-        return this.transport.delete(this.getEndpoint('*'), this.stack);
+        return this.transport.delete(this.getEndpoint(), this.stack);
     }
 
     /**
      * Get the endpoint for the query.
      *
-     * @param {string} [key] primary key which, if given, is appended
-     *                       to the endpoint as per RESTful conventions
+     * @param {boolean} [withId] append a model ID to the endpoint
      * @returns {string|null}
      * @throws {Error} when endpoint is not set
      */
@@ -512,7 +496,7 @@ export default class QueryBuilder {
             throw new Error('Endpoint is required but is not set.');
         }
 
-        if (typeof key !== 'undefined') {
+        if (key) {
             return this.endpoint + '/' + key;
         }
 

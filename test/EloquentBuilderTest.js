@@ -22,7 +22,10 @@ describe('EloquentBuilder', function () {
         // Stub out the http call
         rows = [row(1, 'first'), row(2, 'second'), row(3, 'third')];
         transport = {
-            get: sinon.stub().resolves(rows)
+            get: sinon.stub().resolves(rows),
+            post: sinon.stub().resolves(rows),
+            put: sinon.stub().resolves(rows),
+            delete: sinon.stub().resolves(true)
         };
 
         // New up the builder
@@ -121,11 +124,6 @@ describe('EloquentBuilder', function () {
             expect(builder.endpoint).to.equal('api');
         });
 
-        it('uses RESTful convention for endpoint when model already exists', function() {
-            builder._setModel(new Person({ id: 6 }));
-            expect(builder.endpoint).to.equal('api/6');
-        });
-
         it('copies scope methods from the model to the builder to allow chaining', function () {
             let Dog = class extends Model {};
             Dog.scopes = ['ofBreed', 'living'];
@@ -155,6 +153,26 @@ describe('EloquentBuilder', function () {
     describe('get()', function () {
         it('returns hydrated models', function () {
             return expect(builder.get()).to.eventually.eql(rows.map((row) => new Person(row)));
+        });
+    });
+
+    /** @test {EloquentBuilder#update} */
+    describe('update()', function () {
+        it('hits a RESTful endpoint', function() {
+            builder._setModel(new Person({ id: 6 }));
+            builder.update({ name: 'Ann' });
+
+            expect(transport.put).to.have.been.calledWith('api/6');
+        });
+    });
+
+    /** @test {EloquentBuilder#delete} */
+    describe('delete()', function () {
+        it('hits a RESTful endpoint', function() {
+            builder._setModel(new Person({ id: 6 }));
+            builder.delete({ name: 'Ann' });
+
+            expect(transport.delete).to.have.been.calledWith('api/6');
         });
     });
 });

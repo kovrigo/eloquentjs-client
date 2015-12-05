@@ -86,28 +86,28 @@ describe('QueryBuilder', function () {
     });
 
     describe('update()', function() {
-        it('uses transport to make a PUT request to a faked RESTful URL', function () {
+        it('uses transport to make a PUT request to the endpoint', function () {
             sinon.spy(query.transport, 'put');
             query.from('api/people').update({ active: 0 });
-            expect(query.transport.put).to.have.been.calledWith('api/people/*', { active: 0 });
+            expect(query.transport.put).to.have.been.calledWith('api/people', { active: 0 });
         });
         it('passes the query stack to the transport', function () {
             sinon.spy(query.transport, 'put');
             query.from('api/people').where('name', 'Francis').update({});
-            expect(query.transport.put).to.have.been.calledWith('api/people/*', {}, query.stack);
+            expect(query.transport.put).to.have.been.calledWith('api/people', {}, query.stack);
         });
     });
 
     describe('delete()', function() {
-        it('uses transport to make a DELETE request to a faked RESTful URL', function() {
+        it('uses transport to make a DELETE request to the endpoint', function() {
             sinon.spy(query.transport, 'delete');
             query.from('api/people').delete();
-            expect(query.transport.delete).to.have.been.calledWith('api/people/*');
+            expect(query.transport.delete).to.have.been.calledWith('api/people');
         });
         it('passes the query stack to the transport', function () {
             sinon.spy(query.transport, 'delete');
             query.from('api/people').where('name', 'Francis').delete();
-            expect(query.transport.delete).to.have.been.calledWith('api/people/*', query.stack);
+            expect(query.transport.delete).to.have.been.calledWith('api/people', query.stack);
         });
     });
 });

@@ -141,6 +141,46 @@ export default class EloquentBuilder extends QueryBuilder {
     }
 
     /**
+     * Execute the query as an "update" statement.
+     *
+     * There are two ways of running an update - on an existing
+     * model, e.g. `post.update()`, or via the query builder, e.g.
+     * `Post.where(...).update()`.
+     *
+     * The former is straightforward to implement. We can simply set
+     * up our RESTful controller in Laravel and make a PUT request to
+     * /resource/{id}. The latter is more complex because we don't have
+     * an ID.
+     *
+     * To support this, we use `*` in place of the ID to refer to all models.
+     * The various query clauses can then be sent to the server in
+     * just the same way as we would do for a GET, i.e. in URL's query
+     * string.
+     *
+     * Note this overrides update() on the child QueryBuilder class. This
+     * method differs in the automatic addition of an ID (or wildcard) to
+     * the endpoint URL, whereas QueryBuilder.update uses the configured
+     * endpoint as-is.
+     *
+     * @param  {object} values
+     * @return {Promise}
+     */
+    update(values) {
+        return this.transport.put(this.getEndpoint(this._model.getKey() || '*'), values, this.stack);
+    }
+
+    /**
+     * Execute the query as a "delete" statement.
+     *
+     * See comments on update() - similar situation here.
+     *
+     * @return {Promise}
+     */
+    delete() {
+        return this.transport.delete(this.getEndpoint(this._model.getKey() || '*'), this.stack);
+    }
+
+    /**
      * Add a scope call to the query.
      *
      * @param {string} scopeName
@@ -173,10 +213,8 @@ export default class EloquentBuilder extends QueryBuilder {
      * @param {Model} model
      */
     _setModel(model) {
-        let key = model.getKey();
-
         this._model = model;
-        this.from(key ? model.endpoint+'/'+key : model.endpoint);
+        this.from(model.endpoint);
 
         // Laravel uses the PHP __call magic to refer back to the
         // underlying model instance to handle any scope calls.
