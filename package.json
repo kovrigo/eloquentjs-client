@@ -8,6 +8,7 @@
     "build": "browserify src/index.js -g uglifyify -t babelify -s Eloquent --outfile dist/index.js",
     "test": "mocha test/index.js -w --compilers js:babel/register",
     "test:single": "istanbul cover _mocha -- -R spec test/index.js --compilers js:babel/register",
+    "test:travis": "istanbul cover _mocha --report lcovonly -- -R spec test/index.js --compilers js:babel/register && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "build-docs": "esdoc -c ./esdoc.json"
   },
   "repository": {
@@ -32,10 +33,12 @@
     "browserify": "^12.0.1",
     "chai": "^3.3.0",
     "chai-as-promised": "^5.1.0",
+    "coveralls": "^2.11.4",
     "fetch-mock": "^2.3.0",
     "istanbul": "^0.4.0",
     "lodash": "^3.10.1",
     "mocha": "^2.3.3",
+    "mocha-lcov-reporter": "^1.0.0",
     "sinon": "^1.17.1",
     "sinon-as-promised": "^4.0.0",
     "sinon-chai": "^2.8.0",
