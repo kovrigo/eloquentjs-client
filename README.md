@@ -1,4 +1,7 @@
 # EloquentJs client library
+[![API docs](https://doc.esdoc.org/github.com/parsnick/eloquentjs-client/badge.svg)](https://doc.esdoc.org/github.com/parsnick/eloquentjs-client/)
+[![Build Status](https://travis-ci.org/parsnick/eloquentjs-client.svg)](https://travis-ci.org/parsnick/eloquentjs-client)
+[![Coverage Status](https://coveralls.io/repos/parsnick/eloquentjs-client/badge.svg?branch=master&service=github)](https://coveralls.io/github/parsnick/eloquentjs-client?branch=master)
 
 This repo contains the javascript source for the EloquentJs project.
 For more information about EloquentJs, see the [main eloquentjs repository](https://github.com/parsnick/eloquentjs).
