@@ -1,109 +1,127 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
 import Model from '../src/Eloquent/Model';
-import EloquentBuilder from '../src/Eloquent/Builder';
 
 /** @test {Model} */
 describe('Model', function () {
 
-    let Person;
-    let person;
-    let attributes = {
-        name: 'Dave',
-        email: 'dave@example.com'
-    };
+    let Person; // the "class"
+    let person; // an instance of Person
+    let attributes; // dummy data for the person
 
-    beforeEach(function () {
+    // Stubs for common dependencies
+    let builderStub = {};
+    let containerStub = {};
+
+    // Reset the stubs, data, Person class, and person instance
+    beforeEach(function modelSetup() {
+        builderStub = { _setModel: sinon.stub() };
+        containerStub = { make: sinon.stub().withArgs('Builder').returns(builderStub) };
+
+        attributes = {
+            name: 'Dave',
+            email: 'dave@example.com'
+        };
+
         Person = class extends Model {};
+        Person.boot(containerStub);
         person = new Person(attributes);
         person.exists = true;
     });
 
-    it('exposes attributes as public properties', function () {
-        expect(person.name).to.equal('Dave');
-    });
+    context('data', () => {
+        it('is made available as public properties', () => {
+            expect(person.name).to.equal('Dave');
+        });
 
-    /** @test {Model#getAttributes} */
-    it('gets all its attributes', function () {
-        expect(person.getAttributes()).to.eql(attributes)
-    });
+        /** @test {Model#getAttributes} */
+        it('can be retreived as plain object ', () => {
+            expect(person.getAttributes()).to.eql(attributes)
+        });
 
-    /** @test {Model#setAttributes} */
-    it('can have its attributes changed', function () {
-        person.setAttribute('name', 'Dorothy');
-        expect(person.name).to.equal('Dorothy');
+        /** @test {Model#setAttributes} */
+        it('can be changed', () => {
+            person.setAttribute('name', 'Dorothy');
+            expect(person.name).to.equal('Dorothy');
 
-        person.name = 'Doris';
-        expect(person.getAttribute('name')).to.equal('Doris');
-    });
+            person.name = 'Doris';
+            expect(person.getAttribute('name')).to.equal('Doris');
+        });
 
-    /** @test {Model#getDirty} */
-    it('gets the changed attributes', function () {
-        person.name = 'Donna';
-        expect(person.getDirty()).to.eql({
-            name: 'Donna'
+        /** @test {Model#getDirty} */
+        it('tracks any changes', () => {
+            person.name = 'Donna';
+            expect(person.getDirty()).to.eql({
+                name: 'Donna'
+            });
+        });
+
+        context('when the column is a date', () => {
+
+            beforeEach(function setupPersonWithTimestamp() {
+                person = new Person({ created_at: '2015-11-23T12:11:03+0000' });
+            })
+
+            it('is cast to a Date object', () => {
+                expect(person.created_at).to.be.an.instanceOf(Date);
+            });
+
+            it('can be configured at run-time on the class object', () => {
+                let Dog = class extends Model {};
+                Dog.dates = ['birthday'];
+
+                let buster = new Dog({ birthday: '2015-11-23T12:11:03+0000' });
+
+                expect(buster.birthday).to.be.an.instanceOf(Date);
+            });
+
+            it('is cloned', () => {
+                person.created_at.setFullYear(1999);
+                expect(person.created_at).not.to.equal(person.original.created_at);
+            });
+
+            it('is cast to a UNIX timestamp when converted to JSON', () => {
+                let asJSON = JSON.stringify(person);
+                expect(JSON.parse(asJSON).created_at).to.be.a('number');
+            });
+        });
+
+        /** @test {Model#fill} */
+        it('fills the model from an attributes object', () => {
+            person.fill({ name: 'Bob' });
+            expect(person.name).to.equal('Bob');
         });
     });
 
-    context('when a column is date', function () {
-        it('is casts to a Date object', function () {
-            let person = new Person({ created_at: '2015-11-23T12:11:03+0000'});
-            expect(person.created_at).to.be.an.instanceOf(Date);
+    describe('query builder', () => {
+
+        /** @test {Model#newQuery} */
+        it('can be created from a model instance', () => {
+            expect(person.newQuery()).to.equal(builderStub);
+            expect(builderStub._setModel).to.have.been.calledWith(person);
         });
 
-        it('can be configured on the class object', function () {
-            let Dog = class extends Model {};
-            Dog.dates = ['birthday'];
-            let buster = new Dog({ birthday: '2015-11-23T12:11:03+0000'});
-            expect(buster.birthday).to.be.an.instanceOf(Date);
+        /** @test {Model#query} */
+        it('can be created from a model class (statically)', () => {
+            expect(Person.query()).to.equal(builderStub);
+            expect(builderStub._setModel.args[0][0]).to.be.an.instanceOf(Person);
         });
 
-        it('is cloned', function() {
-            let person = new Person({ created_at: '2015-11-23T12:11:03+0000'});
-            person.created_at.setFullYear(1999);
-            expect(person.created_at).not.to.equal(person.original.created_at);
+        it('proxies query methods to a new builder instance', () => {
+            builderStub.where = sinon.stub().returnsThis();
+            expect(person.where('a', '=', 'b')).to.equal(builderStub);
+            expect(builderStub.where).to.have.been.calledWith('a', '=', 'b');
         });
 
-        it('is cast to a UNIX timestamp when converted to JSON', function() {
-            let person = new Person({ created_at: '2015-11-23T12:11:03+0000'});
-            let asJSON = JSON.stringify(person);
-            expect(JSON.parse(asJSON).created_at).to.be.a('number');
-        });
-    });
-
-    /** @test {Model#fill} */
-    it('fills the model from an attributes object', function () {
-        person.fill({ name: 'Bob' });
-        expect(person.name).to.equal('Bob');
-    });
-
-    /** @test {Model#newQuery} */
-    it('gets a new query builder from a model instance', function () {
-        let builder = person.newQuery();
-        expect(builder).to.be.an.instanceOf(EloquentBuilder);
-        expect(builder._getModel()).to.equal(person);
-    });
-
-    /** @test {Model#query} */
-    it('gets a new query builder statically', function () {
-        let builder = Person.query();
-        expect(builder).to.be.an.instanceOf(EloquentBuilder);
-        expect(builder._getModel()).to.be.an.instanceOf(Person);
-    });
-
-    describe('query builder', function () {
-        it('proxies query methods to a new builder instance', function () {
-            expect(person.where('a', '=', 'b')).to.be.an.instanceOf(EloquentBuilder);
-        });
-
-        it('can be called statically', function () {
-            expect(Person.where('a', '=', 'b')).to.be.an.instanceOf(EloquentBuilder);
+        it('can be called statically', () => {
+            builderStub.where = sinon.stub().returnsThis();
+            expect(Person.where('a', '=', 'b')).to.equal(builderStub);
         });
     });
 
-    describe('hydrate()', function () {
-        /** @test {Model#hydrate} */
-        it('creates an array of models from an array of plain objects', function () {
+    /** @test {Model#hydrate} */
+    describe('hydrate()', () => {
+        it('creates an array of models from an array of plain objects', () => {
             let person1 = attributes;
             let person2 = { name: 'Donald', email: 'donald@example.com' };
 
@@ -117,192 +135,183 @@ describe('Model', function () {
         });
     });
 
-    describe('all()', function () {
-        /** @test {Model#all} */
-        it('fetches all models', function () {
-            sinon.stub(EloquentBuilder.prototype, 'get').returns('ALL');
+    /** @test {Model#all} */
+    describe('all()', () => {
+        it('fetches all models', () => {
+            builderStub.get = sinon.stub().returns('ALL');
             expect(Person.all()).to.equal('ALL');
         });
     });
 
+    /** @test {Model#boot} */
     describe('boot()', function () {
-        /** @test {Model#boot} */
+        let Dog;
+
         it('is called once per model', function () {
-            let Dog = class extends Model {};
+            Dog = class extends Model {};
             let spy = sinon.spy(Dog, 'boot');
             new Dog();
             new Dog();
             expect(spy).to.have.been.calledOnce;
         });
 
-        describe('scoped method', function () {
-            let Dog;
+        describe('scoped method', () => {
 
-            beforeEach(function () {
+            beforeEach('setupModelWithScopes', () => {
                 Dog = class extends Model {};
                 Dog.scopes = ['ofBreed'];
                 Dog.boot();
+                builderStub.scope = sinon.stub().returnsThis();
             });
 
-            it('is added to the class', function () {
+            it('is added to the class', () => {
                 expect(Dog.ofBreed).to.be.a('function');
             });
 
-            it('is added to the prototype', function () {
+            it('is added to the prototype', () => {
                 let rover = new Dog({ name: 'rover' });
                 expect(rover.ofBreed).to.be.a('function');
             });
 
-            it('returns a builder object', function () {
-                expect(Dog.ofBreed('terrier')).to.be.an.instanceOf(EloquentBuilder);
+            it('returns a builder object', () => {
+                expect(Dog.ofBreed('terrier')).to.equal(builderStub);
             });
 
-            it('calls scope() on the builder', function () {
-                let spy = sinon.spy(EloquentBuilder.prototype, 'scope');
+            it('calls scope() on the builder', () => {
                 Dog.ofBreed('terrier');
-                expect(spy).to.have.been.calledWith('ofBreed', ['terrier']);
+                expect(builderStub.scope).to.have.been.calledWith('ofBreed', ['terrier']);
             });
         });
     });
 
-    describe('create()', function () {
-        /** @test {Model#create} */
-        it('news up an instance with the given attributes and saves it', function () {
+    /** @test {Model#create} */
+    describe('create()', () => {
+        it('news up an instance with the given attributes and saves it', () => {
             let stub = sinon.stub(Person.prototype, 'save').resolves();
+
             let saveRequest = Person.create({ name: 'Flibble' });
+
             expect(stub).to.have.been.called;
             return expect(saveRequest).to.eventually.be.an.instanceOf(Person);
         });
     });
 
     /** @test {Model#save} */
-    describe('save()', function () {
+    describe('save()', () => {
 
-        let builder;
+        context('on a non-existent model', () => {
 
-        beforeEach(function stubBuilder() {
-            builder = Person.query();
-            sinon.stub(Person.prototype, 'newQuery').returns(builder);
-        });
-
-        context('on a non-existing model', function () {
-
-            let model;
-
-            beforeEach(function stubInsert() {
-                sinon.stub(builder, 'insert').resolves({ id: 2, name: 'Cat' });
-                model = new Person({ name: 'Cat' });
+            beforeEach('stubInsert', () => {
+                builderStub.insert = sinon.stub().resolves(attributes);
+                person.exists = false;
             });
 
-            it('calls insert() on the query builder', function () {
-                model.save();
-                expect(builder.insert).to.have.been.calledWith(model.getAttributes());
+            it('calls insert() on the query builder', () => {
+                person.save();
+                expect(builderStub.insert).to.have.been.calledWith(person.getAttributes());
             });
 
-            it('updates the instance with the new attributes from the server', function () {
-                return model.save().then(() => expect(model.id).to.equal(2));
+            it('updates the instance with the new attributes from the server', () => {
+                builderStub.insert.resolves(Object.assign(attributes, { id: 2 }));
+                return person.save().then(() => expect(person.id).to.equal(2));
             });
         });
 
-        context('on an existing model', function () {
+        context('on an existing model', () => {
 
-            let model;
-
-            beforeEach(function stubUpdate() {
-                sinon.stub(builder, 'update').resolves({ id: 2, name: 'Cat', updated_at: Date.now() });
-                model = new Person({ name: 'Cat' });
-                model.exists = true;
+            beforeEach('stubUpdate', () => {
+                builderStub.update = sinon.stub().resolves({ serverSays: 'Hello' });
             });
 
-            it('calls update() on the query builder', function () {
-                model.save();
-                expect(builder.update).to.have.been.calledWith(model.getDirty());
+            it('calls update() on the query builder', () => {
+                person.save();
+                expect(builderStub.update).to.have.been.calledWith(person.getDirty());
             });
 
-            it('updates the instance with the new attributes from the server', function () {
-                return model.save().then(() => expect(model.id).to.equal(2));
+            it('updates the instance with the new attributes from the server', () => {
+                return person.save().then(() => expect(person.serverSays).to.equal('Hello'));
             });
         });
     });
 
     /** @test {Model#update} */
-    it('updates the model attributes and saves it', function() {
+    it('updates the model attributes and saves it', () => {
         sinon.stub(person, 'save');
+
         person.update({ name: 'Delia' });
+
         expect(person.save).to.have.been.called;
         expect(person.name).to.equal('Delia');
     });
 
     /** @test {Model#delete} */
-    it('deletes the model', function() {
-        let builder = person.newQuery();
-        sinon.stub(person, 'newQuery').returns(builder);
-        sinon.stub(builder, 'delete').resolves(true);
+    it('deletes the model', () => {
+        person.id = 5;
+        builderStub.where = sinon.stub().returnsThis();
+        builderStub.delete = sinon.stub().resolves(true);
+
         return person.delete().then(response => {
             expect(person.exists).to.equal(false);
-            expect(builder.delete).to.have.been.called;
+            expect(builderStub.where).to.have.been.calledWith('id', 5);
+            expect(builderStub.delete).to.have.been.called;
         });
     });
 
-    describe('eventing', function() {
-        [
+    describe('eventing', () => {
+        let eventNames = [
             'creating', 'created', 'updating', 'updated',
             'saving', 'saved', 'deleting', 'deleted'
-        ].forEach(observable => {
-            it(`registers a ${observable} event handler`, function() {
+        ];
+        let observer;
+
+        eventNames.forEach(observable => {
+            it(`registers a ${observable} event handler`, () => {
                 let handler = function () {};
                 Person[observable](handler);
                 expect(Person.events[observable]).to.contain(handler);
             });
         })
 
-        let builder;
-
-        beforeEach(() => {
-            builder = stubNewQuery(Person.prototype);
-            builder.insert = sinon.stub().resolves();
-            builder.update = sinon.stub().resolves();
-            builder.delete = sinon.stub().resolves();
+        beforeEach('stubBuilderOperations', () => {
+            observer = sinon.stub();
+            builderStub.insert = sinon.stub().resolves();
+            builderStub.update = sinon.stub().resolves();
+            builderStub.delete = sinon.stub().resolves();
         });
 
-        context('when a new model is created', function () {
+        it('can have any number of observers', () => {
+            let observer2 = sinon.spy();
+            Person.creating(observer);
+            Person.creating(observer2);
 
-            it('fires the creating event beforehand', function() {
-                let observer = sinon.spy();
+            Person.create({ name: 'Dave' });
+
+            expect(observer).to.have.been.called.once;
+            expect(observer2).to.have.been.called.once;
+        });
+
+        context('when a new model is created', () => {
+
+            it('fires the creating event beforehand', () => {
                 Person.creating(observer);
 
                 Person.create({ name: 'Dave' });
 
                 expect(observer).to.have.been.called;
                 expect(observer.args[0][0]).to.be.an.instanceOf(Person);
-                expect(observer.args[0][0].exists).to.equal(false);
             });
 
-            it('cancels the creation if event handler returns false', function() {
-                let observer = sinon.stub().returns(false);
+            it('cancels the creation if event handler returns false', () => {
+                observer.returns(false);
                 Person.creating(observer);
 
                 let request = Person.create({ name: 'Dave' });
 
-                expect(builder.insert).not.to.have.been.called;
-                expect(observer.args[0][0].exists).to.equal(false);
+                expect(builderStub.insert).not.to.have.been.called;
                 return expect(request).to.eventually.be.rejectedWith('cancelled');
             });
 
-            it('can have any number of observers', function() {
-                let observer1 = sinon.spy();
-                let observer2 = sinon.spy();
-                Person.creating(observer1);
-                Person.creating(observer2);
-
-                Person.create({ name: 'Dave' });
-
-                expect(observer1).to.have.been.called.once;
-                expect(observer2).to.have.been.called.once;
-            });
-
-            it('fires the created event afterwards', function() {
-                let observer = sinon.spy();
+            it('fires the created event afterwards', () => {
                 Person.created(observer);
 
                 let request = Person.create({ name: 'Dave' });
@@ -316,10 +325,9 @@ describe('Model', function () {
             });
         });
 
-        context('whenever a model is saved', function () {
+        context('whenever a model is saved', () => {
 
-            it('fires the saving event beforehand', function() {
-                let observer = sinon.spy();
+            it('fires the saving event beforehand', () => {
                 let person = new Person({ name: 'Dave' });
                 Person.saving(observer);
 
@@ -330,8 +338,7 @@ describe('Model', function () {
                 expect(observer.args[0][0].exists).to.equal(false);
             });
 
-            it('fires the saved event afterwards', function() {
-                let observer = sinon.spy();
+            it('fires the saved event afterwards', () => {
                 let person = new Person({ name: 'Dave' });
                 Person.saved(observer);
 
@@ -344,17 +351,9 @@ describe('Model', function () {
 
         });
 
-        context('when a model is updated', function () {
+        context('when a model is updated', () => {
 
-            let person;
-
-            beforeEach(() => {
-                person = new Person({ name: 'Dave' });
-                person.exists = true;
-            })
-
-            it('fires the updating event beforehand', function() {
-                let observer = sinon.spy();
+            it('fires the updating event beforehand', () => {
                 Person.updating(observer);
 
                 person.update({ name: 'Not Dave' });
@@ -363,8 +362,7 @@ describe('Model', function () {
                 expect(observer.args[0][0]).to.equal(person);
             });
 
-            it('fires the updated event afterwards', function() {
-                let observer = sinon.spy();
+            it('fires the updated event afterwards', () => {
                 Person.updated(observer);
 
                 return person.update({ name: 'Not Dave' }).then(success => {
@@ -375,17 +373,11 @@ describe('Model', function () {
             });
         });
 
-        context('when a model is deleted', function () {
+        context('when a model is deleted', () => {
 
-            let person;
+            beforeEach('stubWhereForDeleteClause', () => builderStub.where = sinon.stub().returnsThis());
 
-            beforeEach(() => {
-                person = new Person({ name: 'Dave' });
-                person.exists = true;
-            })
-
-            it('fires the deleting event beforehand', function() {
-                let observer = sinon.spy();
+            it('fires the deleting event beforehand', () => {
                 Person.deleting(observer);
 
                 person.delete();
@@ -394,10 +386,9 @@ describe('Model', function () {
                 expect(observer.args[0][0]).to.equal(person);
             });
 
-            it('fires the deleted event afterwards', function() {
-                let observer = sinon.spy();
+            it('fires the deleted event afterwards', () => {
                 Person.deleted(observer);
-                builder.delete.resolves(true);
+                builderStub.delete.resolves(true);
 
                 return person.delete().then(success => {
                     expect(observer).to.have.been.called;
@@ -408,10 +399,3 @@ describe('Model', function () {
         });
     });
 });
-
-function stubNewQuery(model)
-{
-    let builder = model.newQuery();
-    sinon.stub(model, 'newQuery').returns(builder);
-    return builder;
-}

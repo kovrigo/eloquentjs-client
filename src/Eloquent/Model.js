@@ -1,4 +1,3 @@
-import Eloquent from '../index';
 import EloquentBuilder from './Builder';
 
 let booted = [];
@@ -64,15 +63,20 @@ export default class Model {
      * can set up the prototype, based on configuration
      * values attached the constructor.
      *
+     * @param {Container} [container]
      * @returns {void}
      */
-    static boot() {
+    static boot(container) {
         booted.push(this);
 
         this.events = {};
 
         if (this.scopes) {
             this._bootScopes(this.scopes);
+        }
+
+        if (container) {
+            Model.container = container;
         }
     }
 
@@ -214,7 +218,12 @@ export default class Model {
      * @returns {EloquentBuilder}
      */
     newQuery() {
-        let builder = Eloquent.make.Builder();
+        if ( ! Model.container) {
+            throw new Error('Model not booted, cannot make query builder.');
+        }
+
+        let builder = Model.container.make('Builder');
+        //let builder = Eloquent.make.Builder();
         builder._setModel(this);
         return builder;
     }
