@@ -6,9 +6,9 @@ import sinonChai from 'sinon-chai';
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+import './ContainerTest';
 import './QueryBuilderTest';
 import './EloquentBuilderTest';
 import './TransportTest';
 import './ModelTest';
-import './ManagerTest';
 import './ModuleTest';

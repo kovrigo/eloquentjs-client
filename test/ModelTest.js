@@ -17,6 +17,7 @@ describe('Model', function () {
     beforeEach(function modelSetup() {
         builderStub = { _setModel: sinon.stub() };
         containerStub = { make: sinon.stub().withArgs('Builder').returns(builderStub) };
+        Model.container = containerStub;
 
         attributes = {
             name: 'Dave',
@@ -24,7 +25,6 @@ describe('Model', function () {
         };
 
         Person = class extends Model {};
-        Person.boot(containerStub);
         person = new Person(attributes);
         person.exists = true;
     });

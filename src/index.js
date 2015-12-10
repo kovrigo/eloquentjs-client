@@ -1,16 +1,16 @@
-import EloquentBuilder from './Eloquent/Builder';
-import Manager from './Manager';
+import Builder from './Eloquent/Builder';
 import Model from './Eloquent/Model';
-import QueryBuilder from './Query/Builder';
 import Transport from './Query/Transport';
+import Container from './Container';
 
-let manager;
+let container = new Container();
 
 /**
  * Define or retrieve a model definition.
  *
  * @param {string} name
  * @param {Object|function(base: Model): Model|undefined} [definition]
+ *
  * The definition can be either an object of properties
  * to merge into the class, or a callback that receives
  * the base class and returns an extended class definition.
@@ -59,39 +59,66 @@ let manager;
  */
 let Eloquent = function (name, definition) {
 
-    if ( ! manager) {
-        manager = Eloquent.make.Manager();
+    if ( ! Eloquent.booted) {
+        Eloquent.boot();
     }
 
     if (definition) {
         Object.defineProperty(Eloquent, name, {
             get: function () {
-                return manager.named(name);
+                return container.make(name);
             }
         });
-        return manager.define(name, definition);
+
+        let init = definition;
+
+        if (typeof definition !== 'function') {
+            init = function (BaseModel) {
+                return Object.assign(BaseModel, definition);
+            };
+        }
+
+        container.resolving(name, function (BaseModel) {
+            let Model = init(BaseModel);
+            Model.boot();
+            return Model;
+        });
+
+        return container.register(name, class extends (container.get('Model')) {});
     }
 
-    return manager.named(name);
+    return container.make(name);
 };
 
 /**
- * @type {Object} Eloquent.make
- * @property {function(): EloquentBuilder} Builder
- * @property {function(): Transport} Transport
- * @property {function(): Manager} Manager
+ * Bootstrap our Eloquent implementation by registering some default bindings.
+ *
+ * @returns {void}
  */
-Eloquent.make = {
-    Builder: function () {
-        return new EloquentBuilder(this.Transport());
-    },
-    Transport: function () {
-        return new Transport();
-    },
-    Manager: function () {
-        return new Manager(Model);
-    }
+Eloquent.boot = function () {
+
+    Eloquent.booted = true;
+
+    Model.container = container;
+
+    container.register('Builder', Builder);
+    container.register('Transport', Transport);
+    container.register('Model', Model);
+
+    container.resolving('Builder', function (Builder, container) {
+        return new Builder(container.make('Transport'));
+    });
+
 };
 
-
+/*
+ * Exports
+ */
 export default Eloquent;
+export {
+    container as app,
+    Container,
+    Builder,
+    Model,
+    Transport
+};
