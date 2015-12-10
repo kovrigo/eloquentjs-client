@@ -15,8 +15,11 @@ describe('Model', function () {
 
     // Reset the stubs, data, Person class, and person instance
     beforeEach(function modelSetup() {
-        builderStub = { _setModel: sinon.stub() };
-        containerStub = { make: sinon.stub().withArgs('Builder').returns(builderStub) };
+        builderStub = { _setModel: sinon.stub() }
+        containerStub = {
+            get: sinon.stub().returns(builderStub),
+            make: sinon.stub().returns(builderStub)
+        };
         Model.container = containerStub;
 
         attributes = {

@@ -81,6 +81,7 @@ export default class EloquentBuilder extends QueryBuilder {
         return this.first(columns).then(throwIfNotFound);
     }
 
+
     /**
      * Get a single column's value from the first result of a query.
      *
@@ -91,18 +92,6 @@ export default class EloquentBuilder extends QueryBuilder {
         return this.first(column).then(function (result) {
             return result[column];
         });
-    }
-
-    /**
-     * Get a single column's value from the first result of a query.
-     *
-     * This is an alias for the "value" method.
-     *
-     * @param {string} column
-     * @returns {Promise}
-     */
-    pluck(column) {
-        return this.value(column);
     }
 
     /**
