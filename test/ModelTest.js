@@ -3,21 +3,17 @@ import sinon from 'sinon';
 import Model from '../src/Eloquent/Model';
 
 /** @test {Model} */
-describe('Model', function () {
+describe('Model', () => {
 
     let Person; // the "class"
     let person; // an instance of Person
     let attributes; // dummy data for the person
-
-    // Stubs for common dependencies
-    let builderStub;
-    let containerStub = {};
+    let builderStub; // stub for common dependency
 
     // Reset the stubs, data, Person class, and person instance
-    beforeEach(function modelSetup() {
+    beforeEach('modelSetup', () => {
         builderStub = { _setModel: sinon.stub() };
-        containerStub = { make: sinon.stub().returns(builderStub) };
-        Model.container = containerStub;
+        Model.builderFactory = () => builderStub;
 
         attributes = {
             name: 'Dave',

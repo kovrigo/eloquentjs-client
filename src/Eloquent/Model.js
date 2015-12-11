@@ -1,5 +1,5 @@
 /**
- * Model
+ * Model class
  */
 export default class Model {
 
@@ -11,8 +11,6 @@ export default class Model {
     constructor(attributes = {}) {
         this.bootIfNotBooted();
 
-        let modelDefinition = Object.getPrototypeOf(this).constructor;
-
         Object.defineProperties(this, {
             original: {
                 writable: true
@@ -21,18 +19,8 @@ export default class Model {
                 value: false,
                 writable: true
             },
-            endpoint: {
-                value: modelDefinition.endpoint,
-                writable: true
-            },
-            primaryKey: {
-                value: modelDefinition.primaryKey || 'id',
-                writable: true
-            },
-            dates: {
-                value: (modelDefinition.dates || []).concat(
-                    'created_at', 'updated_at', 'deleted_at'
-                )
+            definition: {
+                value: this.constructor
             }
         });
 
@@ -89,6 +77,8 @@ export default class Model {
     static _bootSelf() {
         this.booted = true;
 
+        this.dates = (this.dates || []);
+
         if (this.scopes) {
             this._bootScopes(this.scopes);
         }
@@ -108,11 +98,11 @@ export default class Model {
         this.events = {}; // to store event listeners
 
         /*
-         * Check we've got a container - if not, we can't do much more
+         * Check we can get a builder - if not, we can't do much more
          * here, but since there might be a use case for Model without
          * all the query builder type methods (??), we won't throw an error.
          */
-        if ( ! Model.container) {
+        if ( ! Model.builderFactory) {
             return;
         }
 
@@ -128,14 +118,14 @@ export default class Model {
          * definition, adding at runtime reduces the footprint of our
          * library and should be easier to maintain.
          */
-        let Builder = Model.container.make('Builder');
+        let builder = Model.builderFactory();
 
-        Object.getOwnPropertyNames(Builder)
+        Object.getOwnPropertyNames(builder)
             .filter(function (name) {
                 return (
                     name.charAt(0) !== '_'
                     && name !== 'constructor'
-                    && typeof Builder[name] === 'function'
+                    && typeof builder[name] === 'function'
                 )
             })
             .forEach(function (methodName) {
@@ -227,7 +217,7 @@ export default class Model {
      * @returns {Model}
      */
     setAttribute(key, value) {
-        if (this.dates.indexOf(key) > -1) {
+        if (this.isDate(key)) {
             value = new Date(value);
             value.toJSON = asUnixTimestamp;
         }
@@ -248,7 +238,7 @@ export default class Model {
         // back to the original values. Strictly we should account for all
         // non-primitives but for now we'll just do the date objects.
         for (var prop in cloned) {
-            if (this.dates.indexOf(prop) > -1) {
+            if (this.isDate(prop)) {
                 cloned[prop] = new Date(this[prop]);
                 cloned[prop].toJSON = asUnixTimestamp;
             }
@@ -275,6 +265,37 @@ export default class Model {
     }
 
     /**
+     * Get the primary key for this model.
+     *
+     * @returns {Number|undefined}
+     */
+    getKey() {
+        return this[this.getKeyName()];
+    }
+
+    /**
+     * Get the name of the primary key column.
+     *
+     * @returns {string}
+     */
+    getKeyName() {
+        return this.definition.primaryKey || 'id';
+    }
+
+    /**
+     * Check if a column is a date column.
+     *
+     * @param  {string}  column
+     * @returns {Boolean}
+     */
+    isDate(column) {
+        return this.definition
+            .dates
+            .concat('created_at', 'updated_at', 'deleted_at')
+            .indexOf(column) > -1;
+    }
+
+    /**
      * Get a new Eloquent query builder for this model.
      *
      * @static
@@ -290,23 +311,13 @@ export default class Model {
      * @returns {EloquentBuilder}
      */
     newQuery() {
-        if ( ! Model.container) {
-            throw new Error('Model.container must be set');
+        if ( ! Model.builderFactory) {
+            throw new Error('Model.builderFactory not set');
         }
 
-        let builder = Model.container.make('Builder');
+        let builder = Model.builderFactory();
         builder._setModel(this);
         return builder;
-    }
-
-    /**
-     * Create a collection of models from plain objects.
-     *
-     * @param {Object[]} items
-     * @returns {Model[]}
-     */
-    hydrate(items) {
-        return items.map((attributes) => this.newInstance(attributes, true));
     }
 
     /**
@@ -320,6 +331,16 @@ export default class Model {
         let instance = new this.constructor(attributes);
         instance.exists = exists;
         return instance;
+    }
+
+    /**
+     * Create a collection of models from plain objects.
+     *
+     * @param {Object[]} items
+     * @returns {Model[]}
+     */
+    hydrate(items) {
+        return items.map((attributes) => this.newInstance(attributes, true));
     }
 
     /**
@@ -443,15 +464,6 @@ export default class Model {
      */
     static all(columns) {
         return (new this()).newQuery().get(columns);
-    }
-
-    /**
-     * Get the primary key for this model.
-     *
-     * @returns {Number|undefined}
-     */
-    getKey() {
-        return this[this.primaryKey];
     }
 
     /**

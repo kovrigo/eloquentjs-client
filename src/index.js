@@ -99,7 +99,7 @@ Eloquent.boot = function () {
 
     Eloquent.booted = true;
 
-    Model.container = container;
+    Model.builderFactory = container.make.bind(container, 'Builder');
 
     container.register('Builder', Builder);
     container.register('Transport', Transport);

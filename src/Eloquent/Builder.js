@@ -654,23 +654,22 @@ export default class Builder {
      *
      * @protected
      * @param {Model} model
+     * @returns {void}
      */
     _setModel(model) {
         this._model = model;
-        this.from(model.endpoint);
+        this.from(model.definition.endpoint);
 
         // Laravel uses the PHP __call magic to refer back to the
         // underlying model instance to handle any scope calls.
         // Since we can't do that (yet), we'll settle for simply
         // copying the scope methods from the model at runtime.
-        if (model.constructor.scopes) {
-            model.constructor.scopes.forEach(name => {
-                this[name] = function (...args) {
-                    this.scope(name, args);
-                    return this;
-                };
-            });
-        }
+        (model.definition.scopes || []).forEach(name => {
+            this[name] = function (...args) {
+                this.scope(name, args);
+                return this;
+            };
+        });
     }
 };
 
