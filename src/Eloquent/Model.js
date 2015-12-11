@@ -1,5 +1,3 @@
-let booted = [];
-
 /**
  * Model
  */
@@ -49,17 +47,23 @@ export default class Model {
      * @returns {void}
      */
     bootIfNotBooted() {
-        if (booted.indexOf(this.constructor) === -1) {
+        if ( ! this.constructor.booted) {
             this.constructor.boot();
         }
     }
 
     /**
-     * Boot the model
+     * Boot the model.
      *
-     * This happens once per model and is where we
-     * can set up the prototype, based on configuration
-     * values attached the constructor.
+     * Booting lets us defer much of the setup for using EloquentJs
+     * until it's actually needed. This means we can load a single
+     * build of EloquentJs on every page and have access to all our
+     * models, with minimal impact on performance.
+     *
+     * There's actually multiple layers to booting, each intending to
+     * add just the functionality required at the time. Here we've separated
+     * booting the base Model class (i.e. this class) and booting the
+     * various child classes.
      *
      * @returns {void}
      */
@@ -71,14 +75,35 @@ export default class Model {
         this._bootSelf();
     }
 
+    /**
+     * Boot the current class.
+     *
+     * This happens once per model, and is where we can take
+     * any configuration values attached as properties of the
+     * constructor (which is the `this` in a static ES6 class
+     * method, incidentally) and adjust our prototype as needed.
+     *
+     * @protected
+     * @returns {void}
+     */
     static _bootSelf() {
-        booted.push(this);
+        this.booted = true;
 
         if (this.scopes) {
             this._bootScopes(this.scopes);
         }
     }
 
+    /**
+     * Boot the base model class.
+     *
+     * This is where we can set up functionality that's common
+     * to all models, and only needs to happen once regardless
+     * of how many child models are used.
+     *
+     * @protected
+     * @returns {void}
+     */
     static _bootBaseModel() {
         this.events = {}; // to store event listeners
 
@@ -97,7 +122,11 @@ export default class Model {
          * the model. The proxies feature of ES6 would allow us to do
          * something similar here, but the browser support isn't there
          * yet. Instead, we'll programmatically add our own proxy functions
-         * for every method we want to support...
+         * for every method we want to support.
+         *
+         * While we *could* add the proxy methods to the base Model class
+         * definition, adding at runtime reduces the footprint of our
+         * library and should be easier to maintain.
          */
         let Builder = Model.container.make('Builder');
 
@@ -112,20 +141,16 @@ export default class Model {
             .forEach(function (methodName) {
                 // Add to the prototype to handle instance calls
                 if (typeof Model.prototype[methodName] === 'undefined') {
-                    Object.defineProperty(Model.prototype, methodName, {
-                        value: function () {
-                            let builder = this.newQuery();
-                            return builder[methodName].apply(builder, arguments);
-                        }
+                    addMethod(Model.prototype, methodName, function () {
+                        let builder = this.newQuery();
+                        return builder[methodName].apply(builder, arguments);
                     });
                 }
                 // Add to the Model class directly to handle static calls
                 if (typeof Model[methodName] === 'undefined') {
-                    Object.defineProperty(Model, methodName, {
-                        value: function () {
-                            let builder = this.query();
-                            return builder[methodName].apply(builder, arguments);
-                        }
+                    addMethod(Model, methodName, function () {
+                        let builder = this.query();
+                        return builder[methodName].apply(builder, arguments);
                     });
                 }
             });
@@ -139,23 +164,19 @@ export default class Model {
      * Here we can add those named scopes as methods on our
      * prototype, ensuring consistency with the Laravel API.
      *
-     * @access protected
+     * @protected
      * @param {string[]} scopes
      * @returns {void}
      */
     static _bootScopes(scopes) {
         scopes.forEach(function (scope) {
             // Add to the prototype for access by model instances
-            Object.defineProperty(this, scope, {
-                value: function (...args) {
-                    return this.newQuery().scope(scope, args);
-                }
+            addMethod(this, scope, function (...args) {
+                return this.newQuery().scope(scope, args);
             });
             // Add to the class for static access
-            Object.defineProperty(this.constructor, scope, {
-                value: function (...args) {
-                    return this.query().scope(scope, args);
-                }
+            addMethod(this.constructor, scope, function (...args) {
+                return this.query().scope(scope, args);
             });
         }, this.prototype);
     }
@@ -544,8 +565,26 @@ export default class Model {
     }
 }
 
+/**
+ * Attach a method (strictly, a property which is a function)
+ *
+ * @param {object} obj
+ * @param {string} name
+ * @param {function} method
+ * @returns {object} the object passed as `obj`
+ */
+function addMethod(obj, name, method)
+{
+    return Object.defineProperty(obj, name, {
+        value: method
+    });
+}
 
-
+/**
+ * Get date as timestamp.
+ *
+ * @returns {number}
+ */
 function asUnixTimestamp()
 {
     return Math.round(this.valueOf() / 1000);
