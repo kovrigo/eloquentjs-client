@@ -10,16 +10,13 @@ describe('Model', function () {
     let attributes; // dummy data for the person
 
     // Stubs for common dependencies
-    let builderStub = {};
+    let builderStub;
     let containerStub = {};
 
     // Reset the stubs, data, Person class, and person instance
     beforeEach(function modelSetup() {
-        builderStub = { _setModel: sinon.stub() }
-        containerStub = {
-            get: sinon.stub().returns(builderStub),
-            make: sinon.stub().returns(builderStub)
-        };
+        builderStub = { _setModel: sinon.stub() };
+        containerStub = { make: sinon.stub().returns(builderStub) };
         Model.container = containerStub;
 
         attributes = {
@@ -61,7 +58,7 @@ describe('Model', function () {
 
         context('when the column is a date', () => {
 
-            beforeEach(function setupPersonWithTimestamp() {
+            beforeEach('setupPersonWithTimestamp', () => {
                 person = new Person({ created_at: '2015-11-23T12:11:03+0000' });
             })
 
@@ -110,15 +107,18 @@ describe('Model', function () {
             expect(builderStub._setModel.args[0][0]).to.be.an.instanceOf(Person);
         });
 
-        it('proxies query methods to a new builder instance', () => {
-            builderStub.where = sinon.stub().returnsThis();
-            expect(person.where('a', '=', 'b')).to.equal(builderStub);
-            expect(builderStub.where).to.have.been.calledWith('a', '=', 'b');
-        });
+        it('has its methods proxied at boot', () => {
+            builderStub.anyBuilderMethod = sinon.stub().returnsThis();
 
-        it('can be called statically', () => {
-            builderStub.where = sinon.stub().returnsThis();
-            expect(Person.where('a', '=', 'b')).to.equal(builderStub);
+            Model._bootBaseModel();
+
+            // static access
+            expect(Person.anyBuilderMethod('test', 'args')).to.equal(builderStub);
+            expect(builderStub.anyBuilderMethod).to.have.been.calledWith('test', 'args');
+
+            // instance access
+            expect(person.anyBuilderMethod('test', 'args')).to.equal(builderStub);
+            expect(builderStub.anyBuilderMethod).to.have.been.calledWith('test', 'args');
         });
     });
 
