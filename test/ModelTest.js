@@ -1,6 +1,7 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
 import Model from '../src/Eloquent/Model';
+import { app } from '../src/index';
 
 /** @test {Model} */
 describe('Model', () => {
@@ -13,7 +14,7 @@ describe('Model', () => {
     // Reset the stubs, data, Person class, and person instance
     beforeEach('modelSetup', () => {
         builderStub = { _setModel: sinon.stub() };
-        Model.builderFactory = () => builderStub;
+        app.register('Builder', builderStub);
 
         attributes = {
             name: 'Dave',

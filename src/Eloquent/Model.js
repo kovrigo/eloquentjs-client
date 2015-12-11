@@ -1,3 +1,5 @@
+import { app } from '../index';
+
 /**
  * Model class
  */
@@ -98,15 +100,6 @@ export default class Model {
         this.events = {}; // to store event listeners
 
         /*
-         * Check we can get a builder - if not, we can't do much more
-         * here, but since there might be a use case for Model without
-         * all the query builder type methods (??), we won't throw an error.
-         */
-        if ( ! Model.builderFactory) {
-            return;
-        }
-
-        /*
          * Laravel uses the __call() and __callStatic() magic methods
          * to provide easy access to a new query builder instance from
          * the model. The proxies feature of ES6 would allow us to do
@@ -118,7 +111,7 @@ export default class Model {
          * definition, adding at runtime reduces the footprint of our
          * library and should be easier to maintain.
          */
-        let builder = Model.builderFactory();
+        let builder = this._newBuilder();
 
         Object.getOwnPropertyNames(builder)
             .filter(function (name) {
@@ -299,7 +292,7 @@ export default class Model {
      * Get a new Eloquent query builder for this model.
      *
      * @static
-     * @returns {EloquentBuilder}
+     * @returns {Builder}
      */
     static query() {
         return (new this()).newQuery();
@@ -308,14 +301,10 @@ export default class Model {
     /**
      * Get a new Eloquent query builder for this model.
      *
-     * @returns {EloquentBuilder}
+     * @returns {Builder}
      */
     newQuery() {
-        if ( ! Model.builderFactory) {
-            throw new Error('Model.builderFactory not set');
-        }
-
-        let builder = Model.builderFactory();
+        let builder = this.constructor._newBuilder();
         builder._setModel(this);
         return builder;
     }
@@ -331,6 +320,15 @@ export default class Model {
         let instance = new this.constructor(attributes);
         instance.exists = exists;
         return instance;
+    }
+
+    /**
+     * Create a new Builder instance.
+     *
+     * @return {Builder}
+     */
+    static _newBuilder() {
+        return app.make('Builder');
     }
 
     /**

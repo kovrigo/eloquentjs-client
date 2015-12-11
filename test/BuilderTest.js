@@ -1,7 +1,6 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
 import Builder from '../src/Eloquent/Builder';
-import Model from '../src/Eloquent/Model';
 
 /** @test {Builder} */
 describe('Builder', () => {
@@ -15,8 +14,15 @@ describe('Builder', () => {
 
     beforeEach('builderSetup', () => {
         // Reset dependencies
-        Person = class extends Model {};
-        Person.endpoint = 'api';
+        Person = class {
+            constructor(attr) {
+                Object.assign(this, attr || {});
+                this.definition = { endpoint: 'api' };
+            }
+            hydrate(results) {
+                return results.map(result => new Person(result));
+            }
+        };
         person = new Person({ id: 5 });
         person.exists = true;
 
@@ -67,7 +73,7 @@ describe('Builder', () => {
 
     /** @test {Builder#first} */
     it('gets the first result from the current query', () => {
-        return expect(builder.first()).to.eventually.eql(dummyResult[0]);
+        return expect(builder.first()).to.eventually.be.an.instanceOf(Person);
     });
 
     /** @test {Builder#firstOrFail} */
@@ -106,7 +112,7 @@ describe('Builder', () => {
     /** @test {Builder#_getModel} */
     describe('underling model instance', () => {
         it('has a setter and getter', () => {
-            let differentModel = new (class extends Model {});
+            let differentModel = Object.assign({}, person, { iAm: 'different' });
 
             builder._setModel(differentModel);
 
@@ -114,13 +120,13 @@ describe('Builder', () => {
         });
 
         it('provides the query builder with its endpoint', () => {
-            expect(builder.endpoint).to.equal(Person.endpoint);
+            expect(builder.endpoint).to.equal('api');
         });
 
         it('is the source of scope methods copied to the builder', () => {
-            Person.scopes = ['ofBreed', 'living'];
             sinon.spy(builder, 'scope');
-            builder._setModel(new Person());
+            person.definition.scopes = ['ofBreed', 'living'];
+            builder._setModel(person);
 
             builder.ofBreed('terrier').living();
 
@@ -178,10 +184,14 @@ describe('Builder', () => {
         });
 
         context('from an existing model', () => {
+
+            beforeEach(() => {
+                person.exists = true;
+                person.getKey = sinon.stub().returns(6);
+            });
+
             /** @test {Builder#update} */
             it('sends update data to a RESTful endpoint', () => {
-                builder._setModel(new Person({ id: 6 }));
-
                 builder.update({ name: 'Ann' });
 
                 expect(transportStub.put).to.have.been.calledWith('api/6');
@@ -189,8 +199,6 @@ describe('Builder', () => {
 
             /** @test {Builder#delete} */
             it('sends a delete call to a RESTful endpoint', () => {
-                builder._setModel(new Person({ id: 6 }));
-
                 builder.delete();
 
                 expect(transportStub.delete).to.have.been.calledWith('api/6');
@@ -198,7 +206,11 @@ describe('Builder', () => {
         });
 
         context('dynamic', () => {
-            beforeEach(() => builder._setModel(new Person()));
+
+            beforeEach(() => {
+                person.exists = false;
+                person.getKey = sinon.stub().returns(undefined);
+            });
 
             it('sends update data to a faked RESTful URL', () => {
                 builder.where('name', 'Francis').update({ active: 0 });
