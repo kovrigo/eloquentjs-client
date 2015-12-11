@@ -460,7 +460,14 @@ export default class Builder {
         if (Array.isArray(id)) {
             return this.findMany(id, columns);
         }
-        return this.where(this._model.primaryKey, id).first();
+
+        return this.transport.get(this.getEndpoint(id))
+            .then(result => {
+                if ( ! result) {
+                    return null;
+                }
+                return this._model.newInstance(result);
+            });
     }
 
     /**
@@ -471,7 +478,7 @@ export default class Builder {
      * @returns {Promise}
      */
     findMany(ids, columns) {
-        return this.whereIn(this._model.primaryKey, ids).get(columns);
+        return this.whereIn(this._model.getKeyName(), ids).get(columns);
     }
 
     /**
@@ -572,7 +579,7 @@ export default class Builder {
         }
 
         return this.transport.get(this.getEndpoint(), this.stack)
-            .then((results) => this._model.hydrate(results));
+            .then(results => this._model.hydrate(results));
     }
 
     /**

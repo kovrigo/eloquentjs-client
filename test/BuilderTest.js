@@ -51,8 +51,30 @@ describe('Builder', () => {
     });
 
     describe('sugar for finding models by primary key', () => {
+
+        beforeEach(() => person.getKeyName = sinon.stub().returns('KEYNAME'));
+
         /** @test {Builder#find} */
-        it('can fetch a single model from :endpoint/:id');
+        it('can fetch a single model from :endpoint/:id', () => {
+            let result = new Person();
+            transportStub.get.resolves({ some: 'data' });
+            person.newInstance = sinon.stub().returns(result);
+
+            let request = builder.find(2);
+
+            expect(transportStub.get).to.have.been.calledWith('api/2');
+            return request.then(found => {
+                expect(person.newInstance).to.have.been.calledWith({ some: 'data' });
+                expect(found).to.equal(result);
+            });
+        })
+
+        /** @test {Builder#find} */
+        it('defers to findMany() if an array is given to find()', function() {
+            sinon.stub(builder, 'findMany').resolves('FOUND MANY');
+
+            return expect(builder.find([1, 2])).to.eventually.equal('FOUND MANY');
+        });
 
         /** @test {Builder#findMany} */
         it('can fetch multiple models using whereIn', () => {
@@ -60,12 +82,12 @@ describe('Builder', () => {
 
             builder.findMany([1, 2, 3]);
 
-            expect(builder.whereIn).to.have.been.calledWith(person.primaryKey, [1, 2, 3]);
+            expect(builder.whereIn).to.have.been.calledWith('KEYNAME', [1, 2, 3]);
         });
 
         /** @test {Builder#findOrFail} */
         it('throws if no model was found', () => {
-            transportStub.get.resolves([]);
+            transportStub.get.resolves();
 
             return expect(builder.findOrFail(1)).to.eventually.be.rejectedWith('ModelNotFoundException');
         });
