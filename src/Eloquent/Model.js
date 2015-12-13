@@ -249,7 +249,12 @@ export default class Model {
         let attributes = this.getAttributes();
 
         for (let prop in attributes) {
-            if (this.original[prop].valueOf() === attributes[prop].valueOf()) {
+
+            if (
+                typeof this.original[prop] !== 'undefined'
+                &&
+                this.original[prop].valueOf() === attributes[prop].valueOf()
+            ) {
                 delete attributes[prop];
             }
         }
