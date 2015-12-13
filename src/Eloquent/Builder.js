@@ -450,6 +450,17 @@ export default class Builder {
     }
 
     /**
+     * Set the relationships that should be eager loaded.
+     *
+     * @param {string[]} relations
+     * @returns {EloquentBuilder}
+     */
+    with(...relations) {
+        this._call('with', relations);
+        return this;
+    }
+
+    /**
      * Find a model by its primary key.
      *
      * @param {number}   id
@@ -553,17 +564,6 @@ export default class Builder {
         }
 
         this._call('scope', args);
-        return this;
-    }
-
-    /**
-     * Set the relationships that should be eager loaded.
-     *
-     * @param {string[]} relations
-     * @returns {EloquentBuilder}
-     */
-    with(...relations) {
-        this._call('with', relations);
         return this;
     }
 

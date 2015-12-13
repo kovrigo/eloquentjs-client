@@ -117,19 +117,6 @@ describe('Builder', () => {
         });
     });
 
-    xdescribe('with()', function () { // no server-side support yet
-        /** @test {Builder#with} */
-        it('sets the relationships that should be eager loaded', function () {
-            builder.with('comments');
-
-            expect(builder.stack[0]).to.eql(['with', ['comments']]);
-        });
-        /** @test {Builder#with} */
-        it('returns the Builder, not the base QueryBuilder', function () {
-            expect(builder.with('comments')).to.equal(builder);
-        });
-    });
-
     /** @test {Builder#_setModel} */
     /** @test {Builder#_getModel} */
     describe('underling model instance', () => {
@@ -264,6 +251,7 @@ describe('Builder', () => {
             'having', 'orHaving',
             'orderBy', 'latest', 'oldest',
             'offset', 'skip', 'limit', 'take', 'forPage',
+            'with',
         ];
 
         let dummyArgumentsForMethod = (method) => {
