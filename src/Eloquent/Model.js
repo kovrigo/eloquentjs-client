@@ -80,6 +80,7 @@ export default class Model {
         this.booted = true;
 
         this.dates = (this.dates || []);
+        this.relations = (this.relations || []);
 
         if (this.scopes) {
             this._bootScopes(this.scopes);
@@ -227,13 +228,16 @@ export default class Model {
     getAttributes() {
         let cloned = Object.assign({}, this);
 
-        // We want to return a copy of the attributes rather than references
-        // back to the original values. Strictly we should account for all
-        // non-primitives but for now we'll just do the date objects.
         for (var prop in cloned) {
+            // We've only have a shallow clone at the moment,
+            // so let's copy the dates separately.
             if (this.isDate(prop)) {
                 cloned[prop] = new Date(this[prop]);
                 cloned[prop].toJSON = asUnixTimestamp;
+            }
+
+            if (this._isRelation(prop)) {
+                delete cloned[prop];
             }
         }
 
@@ -291,6 +295,16 @@ export default class Model {
             .dates
             .concat('created_at', 'updated_at', 'deleted_at')
             .indexOf(column) > -1;
+    }
+
+    /**
+     * Check if an attribute is a relation.
+     *
+     * @param  {attribute}  attribute
+     * @return {Boolean}
+     */
+    _isRelation(attribute) {
+        return Object.keys(this.definition.relations).indexOf(attribute) > -1;
     }
 
     /**
@@ -468,6 +482,46 @@ export default class Model {
     static all(columns) {
         return (new this()).newQuery().get(columns);
     }
+
+    /**
+     * Eager load the relations.
+     *
+     * @param  {...string} relations
+     * @return {Promise}
+     */
+    load(...relations) {
+        return this
+            .newQuery()
+            .with(relations)
+            .get()
+            .then(attributes => {
+                for (let prop in attributes) {
+                    if (relations.indexOf(prop) > -1) {
+                        attributes[prop] = this._makeRelated(prop, attributes[prop]);
+                    }
+                }
+                return this.fill(Object.assign(attributes, this.getDirty()));
+            });
+    }
+
+    /**
+     * Make the related model(s) for the given items.
+     *
+     * @param  {string} name the name of the related class
+     * @param  {object|object[]} attributes model data, or an array where
+     *                                      each item is the model data
+     * @return {Model|Model[]}
+     */
+    _makeRelated(name, attributes) {
+        let related = app.make(this.definition.relations[name]);
+
+        if (Array.isArray(attributes)) {
+            return related.hydrate(attributes);
+        }
+
+        return related.fill(attributes);
+    }
+
 
     /**
      * Register a 'creating' event handler.

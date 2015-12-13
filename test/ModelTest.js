@@ -398,4 +398,95 @@ describe('Model', () => {
             });
         });
     });
+
+    describe('relationships', () => {
+        /** @test {Model#load} */
+        describe('eager loading', () => {
+            let Comment;
+            let Profile;
+
+            beforeEach('eagerLoadStubs', () => {
+                // Register a relation on the class
+                Person.relations = { comments: 'Comment', profile: 'Profile' };
+
+                // Create the related models in the container
+                Comment = class extends Model {};
+                Profile = class extends Model {};
+                app.register('Comment', Comment);
+                app.register('Profile', Profile);
+
+                // Stub the query builder dependencies
+                builderStub.with = sinon.stub().returnsThis();
+                builderStub.get = sinon.stub().resolves({
+                    name: 'Dave',
+                    comments: [
+                        { body: 'Hello' }
+                    ],
+                    profile: {
+                        website: 'URL'
+                    }
+                });
+            });
+
+            it('uses with() to fetch the model and the requested relations', () => {
+                person.load('comments');
+
+                expect(builderStub.with.args[0][0]).to.contain('comments');
+                expect(builderStub.get).to.have.been.called;
+            });
+
+            it('resolves with the original model', () => {
+                return expect(person.load('comments')).to.eventually.equal(person);
+            });
+
+            it('attaches the returned attributes to the model', () => {
+                expect(person.comments).not.to.be.ok;
+                return person.load('comments').then(person => {
+                    expect(person.comments).to.be.ok;
+                });
+            });
+
+            it('does not clobber dirty attributes', () => {
+                let request = person.load('comments');
+                person.name = 'I CHANGED';
+
+                return request.then(result => {
+                    expect(result.name).to.equal('I CHANGED');
+                })
+            });
+
+            it('hydrates the correct model for a [*]Many relation', () => {
+                return person.load('comments').then(person => {
+                    expect(person.comments).to.have.length(1);
+                    expect(person.comments[0]).to.be.an.instanceOf(Comment);
+                    expect(person.comments[0].body).to.equal('Hello');
+                });
+            });
+
+            it('hydrates the correct model for a [*]One relation', () => {
+                return person.load('profile').then(person => {
+                    expect(person.profile).to.be.an.instanceOf(Profile);
+                    expect(person.profile.website).to.equal('URL');
+                });
+            });
+
+            it('can load multiple relations at the same time', () => {
+                return person.load('profile', 'comments').then(person => {
+                    expect(person.profile).to.be.an.instanceOf(Profile);
+                    expect(person.comments).to.have.length(1);
+                    expect(person.comments[0]).to.be.an.instanceOf(Comment);
+                });
+            });
+        });
+
+        it('does not include relations in getAttributes / getDirty', () => {
+            Person.relations.comments = 'Comment';
+            person.name = '';
+            person.comments = [{ body: 'first' }];
+
+            expect(person.getDirty()).to.eql({ name: '' });
+            expect(person.getAttributes()).not.to.have.key('comments');
+        });
+    });
+
 });
