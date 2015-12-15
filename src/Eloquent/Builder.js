@@ -472,13 +472,7 @@ export default class Builder {
             return this.findMany(id, columns);
         }
 
-        return this.transport.get(this.getEndpoint(id))
-            .then(result => {
-                if ( ! result) {
-                    return null;
-                }
-                return this._model.newInstance(result);
-            });
+        return this.from(this.getEndpoint(id)).getOne();
     }
 
     /**
@@ -580,6 +574,27 @@ export default class Builder {
 
         return this.transport.get(this.getEndpoint(), this.stack)
             .then(results => this._model.hydrate(results));
+    }
+
+    /**
+     * Execute the query and return a promise that resolves with a single result.
+     *
+     * @param  {string|string[]} [columns]
+     * @return {Promise}
+     */
+    getOne(columns) {
+        if (columns) {
+            this.select(columns);
+        }
+
+        return this.transport.get(this.getEndpoint(), this.stack)
+            .then(result => {
+                if ( ! result) {
+                    return null;
+                }
+
+                return this._model.newInstance(result);
+            });
     }
 
     /**

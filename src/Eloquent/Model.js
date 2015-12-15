@@ -490,13 +490,13 @@ export default class Model {
      * @return {Promise}
      */
     load(...relations) {
-        return this
-            .newQuery()
+        let builder = this.newQuery();
+
+        return builder
+            .from(builder.getEndpoint(this.getKey()))
             .with(relations)
-            .get()
-            .then(attributes => {
-                return this.fill(Object.assign(attributes, this.getDirty()));
-            });
+            .getOne()
+            .then(attributes => this.fill(Object.assign(attributes, this.getDirty())));
     }
 
     /**

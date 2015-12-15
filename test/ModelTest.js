@@ -430,7 +430,9 @@ describe('Model', () => {
 
                 // Stub the query builder dependencies
                 builderStub.with = sinon.stub().returnsThis();
-                builderStub.get = sinon.stub().resolves({
+                builderStub.getEndpoint = sinon.stub().returns('ENDPOINT');
+                builderStub.from = sinon.stub().returnsThis();
+                builderStub.getOne = sinon.stub().resolves({
                     name: 'Dave',
                     comments: [
                         { body: 'Hello' }
@@ -445,7 +447,7 @@ describe('Model', () => {
                 person.load('comments');
 
                 expect(builderStub.with.args[0][0]).to.contain('comments');
-                expect(builderStub.get).to.have.been.called;
+                expect(builderStub.getOne).to.have.been.called;
             });
 
             it('resolves with the original model', () => {
