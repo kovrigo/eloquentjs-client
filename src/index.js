@@ -80,7 +80,7 @@ let Eloquent = function (name, definition) {
 
         container.resolving(name, function (BaseModel) {
             let Model = init(BaseModel);
-            Model.boot();
+            Model.prototype.bootIfNotBooted();
             return Model;
         });
 
