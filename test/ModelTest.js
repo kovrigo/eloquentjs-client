@@ -10,10 +10,15 @@ describe('Model', () => {
     let person; // an instance of Person
     let attributes; // dummy data for the person
     let builderStub; // stub for common dependency
+    let BuilderClass = class {
+        _setModel() {
+            return sinon.stub();
+        }
+    };
 
     // Reset the stubs, data, Person class, and person instance
     beforeEach('modelSetup', () => {
-        builderStub = { _setModel: sinon.stub() };
+        builderStub = new BuilderClass();
         app.register('Builder', builderStub);
 
         attributes = {
@@ -92,6 +97,13 @@ describe('Model', () => {
 
     describe('query builder', () => {
 
+        let setModelStub;
+
+        beforeEach('stubSetModel', () => {
+            setModelStub = sinon.stub();
+            Object.getPrototypeOf(builderStub)._setModel = setModelStub;
+        });
+
         /** @test {Model#newQuery} */
         it('can be created from a model instance', () => {
             expect(person.newQuery()).to.equal(builderStub);
@@ -105,8 +117,7 @@ describe('Model', () => {
         });
 
         it('has its methods proxied at boot', () => {
-            builderStub.anyBuilderMethod = sinon.stub().returnsThis();
-
+            Object.getPrototypeOf(builderStub).anyBuilderMethod = sinon.stub().returnsThis();
             Model._bootBaseModel();
 
             // static access
@@ -414,6 +425,8 @@ describe('Model', () => {
                 Profile = class extends Model {};
                 app.register('Comment', Comment);
                 app.register('Profile', Profile);
+                app.resolving('Comment', Model => Model);
+                app.resolving('Profile', Model => Model);
 
                 // Stub the query builder dependencies
                 builderStub.with = sinon.stub().returnsThis();

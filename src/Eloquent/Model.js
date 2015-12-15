@@ -80,7 +80,7 @@ export default class Model {
         this.booted = true;
 
         this.dates = (this.dates || []);
-        this.relations = (this.relations || []);
+        this.relations = (this.relations || {});
 
         if (this.scopes) {
             this._bootScopes(this.scopes);
@@ -112,7 +112,7 @@ export default class Model {
          * definition, adding at runtime reduces the footprint of our
          * library and should be easier to maintain.
          */
-        let builder = this._newBuilder();
+        let builder = Object.getPrototypeOf(this._newBuilder());
 
         Object.getOwnPropertyNames(builder)
             .filter(function (name) {
@@ -124,19 +124,15 @@ export default class Model {
             })
             .forEach(function (methodName) {
                 // Add to the prototype to handle instance calls
-                if (typeof Model.prototype[methodName] === 'undefined') {
-                    addMethod(Model.prototype, methodName, function () {
-                        let builder = this.newQuery();
-                        return builder[methodName].apply(builder, arguments);
-                    });
-                }
+                addMethod(Model.prototype, methodName, function () {
+                    let builder = this.newQuery();
+                    return builder[methodName].apply(builder, arguments);
+                });
                 // Add to the Model class directly to handle static calls
-                if (typeof Model[methodName] === 'undefined') {
-                    addMethod(Model, methodName, function () {
-                        let builder = this.query();
-                        return builder[methodName].apply(builder, arguments);
-                    });
-                }
+                addMethod(Model, methodName, function () {
+                    let builder = this.query();
+                    return builder[methodName].apply(builder, arguments);
+                });
             });
     }
 
@@ -214,6 +210,10 @@ export default class Model {
         if (this.isDate(key)) {
             value = new Date(value);
             value.toJSON = asUnixTimestamp;
+        }
+
+        if (this._isRelation(key)) {
+            value = this._makeRelated(key, value);
         }
 
         this[key] = value;
@@ -495,11 +495,6 @@ export default class Model {
             .with(relations)
             .get()
             .then(attributes => {
-                for (let prop in attributes) {
-                    if (relations.indexOf(prop) > -1) {
-                        attributes[prop] = this._makeRelated(prop, attributes[prop]);
-                    }
-                }
                 return this.fill(Object.assign(attributes, this.getDirty()));
             });
     }
@@ -513,7 +508,7 @@ export default class Model {
      * @return {Model|Model[]}
      */
     _makeRelated(name, attributes) {
-        let related = app.make(this.definition.relations[name]);
+        let related = new (app.make(this.definition.relations[name]));
 
         if (Array.isArray(attributes)) {
             return related.hydrate(attributes);
@@ -640,10 +635,15 @@ export default class Model {
  * @param {object} obj
  * @param {string} name
  * @param {function} method
+ * @param {boolean} force always attempt to add method, even if property exists
  * @returns {object} the object passed as `obj`
  */
-function addMethod(obj, name, method)
+function addMethod(obj, name, method, force)
 {
+    if (typeof obj[name] !== 'undefined' && ! force) {
+        return obj;
+    }
+
     return Object.defineProperty(obj, name, {
         value: method
     });
