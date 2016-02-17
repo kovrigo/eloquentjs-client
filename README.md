@@ -9,7 +9,7 @@ For more information about EloquentJs, see the [main eloquentjs repository](http
 
 ## About
 
-The *EloquentJs* package for Laravel, available via Composer, includes a pre-built copy of this library. If you just want to use *EloquentJs*, head over to the [eloquentjs repo](https://github.com/parsnick/eloquentjs).
+The `parsnick/eloquentjs` package for Laravel, available via Composer, includes a pre-built copy of this library. If you just want to use EloquentJs, head over to the [eloquentjs repo](https://github.com/parsnick/eloquentjs).
 
 If you want to contribute, view the source, or customise the build, carry on.
 
@@ -17,10 +17,10 @@ If you want to contribute, view the source, or customise the build, carry on.
 
 API documentation exists at [doc.esdoc.org/github.com/parsnick/eloquentjs-client](https://doc.esdoc.org/github.com/parsnick/eloquentjs-client/).
 
-User-friendly documentation for usage of this library exists at [parsnick/eloquentjs](https://github.com/parsnick/eloquentjs).
+User-friendly documentation for usage of this library exists at [parsnick.github.io/eloquentjs/client](http://parsnick.github.io/eloquentjs/client/).
 
 ## Contributing
-All contributions welcome. For anything related to the companion PHP package, please use [parsnick/eloquentjs](https://github.com/parsnick/eloquentjs).
+All contributions welcome. For anything related to the companion PHP package, please use [`parsnick/eloquentjs`](https://github.com/parsnick/eloquentjs).
 
 ## License
 MIT
