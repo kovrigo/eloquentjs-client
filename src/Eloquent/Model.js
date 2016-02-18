@@ -207,7 +207,7 @@ export default class Model {
      * @returns {Model}
      */
     setAttribute(key, value) {
-        if (this.isDate(key)) {
+        if (value !== null && this.isDate(key)) {
             value = new Date(value);
             value.toJSON = asUnixTimestamp;
         }

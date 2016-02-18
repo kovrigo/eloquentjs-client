@@ -68,6 +68,11 @@ describe('Model', () => {
                 expect(person.created_at).to.be.an.instanceOf(Date);
             });
 
+            it('does not cast to Date if null', () => {
+                let noOne = new Person({ created_at: null });
+                expect(noOne.created_at).to.be.null;
+            });
+
             it('can be configured at run-time on the class object', () => {
                 let Dog = class extends Model {};
                 Dog.dates = ['birthday'];
