@@ -14,21 +14,17 @@ export default class Builder {
     /**
      * Create a new Builder instance.
      *
-     * @param {Transport} transport
+     * @param {Connection} connection
      */
-    constructor(transport) {
-
-        if ( ! transport || typeof transport.get !== 'function') {
-            throw new Error('Missing argument 1 for Builder, expected Transport');
-        }
+    constructor(connection) {
 
         /**
-         * The transport class to send/receive the query/results.
+         * The connection class to send/receive the query/results.
          *
          * @protected
-         * @type {Transport}
+         * @type {Connection}
          */
-        this.transport = transport;
+        this.connection = connection;
 
         /**
          * The methods called for this query and their arguments.
@@ -37,15 +33,6 @@ export default class Builder {
          * @type {Array[]}
          */
         this.stack = [];
-
-        /**
-         * The endpoint for this query, equivalent to the "table"
-         * property in Laravel's Builder.
-         *
-         * @protected
-         * @type {string|null}
-         */
-        this.endpoint = null;
 
         /**
          * The Model instance being queried
@@ -66,17 +53,6 @@ export default class Builder {
      */
     _call(name, args) {
         this.stack.push([name, args]);
-        return this;
-    }
-
-    /**
-     * Set the endpoint for this query.
-     *
-     * @param {string} endpoint
-     * @returns {Builder}
-     */
-    from(endpoint) {
-        this.endpoint = endpoint;
         return this;
     }
 
@@ -472,7 +448,9 @@ export default class Builder {
             return this.findMany(id, columns);
         }
 
-        return this.from(this.getEndpoint(id)).getOne();
+        return this.connection.read(id, this.stack)
+           .then(result => result ? this._model.newInstance(result) : null)
+        ;
     }
 
     /**
@@ -572,29 +550,8 @@ export default class Builder {
             this.select(columns);
         }
 
-        return this.transport.get(this.getEndpoint(), this.stack)
+        return this.connection.read(null, this.stack)
             .then(results => this._model.hydrate(results));
-    }
-
-    /**
-     * Execute the query and return a promise that resolves with a single result.
-     *
-     * @param  {string|string[]} [columns]
-     * @return {Promise}
-     */
-    getOne(columns) {
-        if (columns) {
-            this.select(columns);
-        }
-
-        return this.transport.get(this.getEndpoint(), this.stack)
-            .then(result => {
-                if ( ! result) {
-                    return null;
-                }
-
-                return this._model.newInstance(result);
-            });
     }
 
     /**
@@ -604,7 +561,7 @@ export default class Builder {
      * @returns {Promise}
      */
     insert(values) {
-        return this.transport.post(this.getEndpoint(), values);
+        return this.connection.create(values);
     }
 
     /**
@@ -628,7 +585,7 @@ export default class Builder {
      * @return {Promise}
      */
     update(values) {
-        return this.transport.put(this.getEndpoint(this._model.getKey() || '*'), values, this.stack);
+        return this.connection.update(this._model.getKey(), values, this.stack);
     }
 
     /**
@@ -639,26 +596,7 @@ export default class Builder {
      * @return {Promise}
      */
     delete() {
-        return this.transport.delete(this.getEndpoint(this._model.getKey() || '*'), this.stack);
-    }
-
-    /**
-     * Get the endpoint for the query.
-     *
-     * @param {boolean} [withId] append a model ID to the endpoint
-     * @returns {string|null}
-     * @throws {Error} when endpoint is not set
-     */
-    getEndpoint(key) {
-        if ( ! this.endpoint) {
-            throw new Error('Endpoint is required but is not set.');
-        }
-
-        if (key) {
-            return this.endpoint + '/' + key;
-        }
-
-        return this.endpoint;
+        return this.connection.delete(this._model.getKey(), this.stack);
     }
 
     /**
@@ -680,7 +618,6 @@ export default class Builder {
      */
     _setModel(model) {
         this._model = model;
-        this.from(model.definition.endpoint);
 
         // Laravel uses the PHP __call magic to refer back to the
         // underlying model instance to handle any scope calls.

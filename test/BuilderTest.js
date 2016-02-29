@@ -6,7 +6,7 @@ import Builder from '../src/Eloquent/Builder';
 describe('Builder', () => {
     let builder; // instance of Builder under test
 
-    let transportStub;
+    let connectionStub;
     let dummyResult;
 
     let Person; // model class
@@ -32,22 +32,16 @@ describe('Builder', () => {
             { id: 2, name: "second" },
             { id: 3, name: "third" },
         ];
-        transportStub = {
-            get: sinon.stub().resolves(dummyResult),
-            post: sinon.stub().resolves(),
-            put: sinon.stub().resolves(),
+        connectionStub = {
+            create: sinon.stub().resolves(),
+            read: sinon.stub().resolves(dummyResult),
+            update: sinon.stub().resolves(),
             delete: sinon.stub().resolves(true)
         };
 
         // New up the builder
-        builder = new Builder(transportStub);
+        builder = new Builder(connectionStub);
         builder._setModel(person);
-    });
-
-    /** @test {Builder#constructor} */
-    it('throws if not passed a Transport', function () {
-        expect(() => new Builder()).to.throw();
-        expect(() => new Builder('rah')).to.throw();
     });
 
     describe('sugar for finding models by primary key', () => {
@@ -57,12 +51,12 @@ describe('Builder', () => {
         /** @test {Builder#find} */
         it('can fetch a single model from :endpoint/:id', () => {
             let result = new Person();
-            transportStub.get.resolves({ some: 'data' });
+            connectionStub.read.resolves({ some: 'data' });
             person.newInstance = sinon.stub().returns(result);
 
             let request = builder.find(2);
 
-            expect(transportStub.get).to.have.been.calledWith('api/2');
+            expect(connectionStub.read).to.have.been.calledWith(2);
             return request.then(found => {
                 expect(person.newInstance).to.have.been.calledWith({ some: 'data' });
                 expect(found).to.equal(result);
@@ -87,7 +81,7 @@ describe('Builder', () => {
 
         /** @test {Builder#findOrFail} */
         it('throws if no model was found', () => {
-            transportStub.get.resolves();
+            connectionStub.read.resolves();
 
             return expect(builder.findOrFail(1)).to.eventually.be.rejectedWith('ModelNotFoundException');
         });
@@ -100,7 +94,7 @@ describe('Builder', () => {
 
     /** @test {Builder#firstOrFail} */
     it('gets the first result, or throws if no results', () => {
-        transportStub.get.resolves([]);
+        connectionStub.read.resolves([]);
 
         return expect(builder.firstOrFail()).to.eventually.be.rejectedWith('ModelNotFoundException');
     });
@@ -128,10 +122,6 @@ describe('Builder', () => {
             expect(builder._getModel()).to.equal(differentModel);
         });
 
-        it('provides the query builder with its endpoint', () => {
-            expect(builder.endpoint).to.equal('api');
-        });
-
         it('is the source of scope methods copied to the builder', () => {
             sinon.spy(builder, 'scope');
             person.definition.scopes = ['ofBreed', 'living'];
@@ -157,26 +147,14 @@ describe('Builder', () => {
 
     });
 
-    /** @test {Builder#from} */
-    it('can change the endpoint for executing the query', () => {
-        let returnValue = builder.from('/api/posts');
-
-        expect(builder.endpoint).to.equal('/api/posts');
-        expect(returnValue).to.equal(builder);
-    });
-
     describe('query execution', () => {
         /** @test {Builder#get} */
         context('for select statements', () => {
 
-            it('throws if no endpoint is set', function () {
-                expect(() => new Builder(transportStub).get()).to.throw(Error);
-            });
-
             it('calls the transporter with the endpoint and query stack', function () {
-                builder.from('/api/posts').where('archived', 0).get();
+                builder.where('archived', 0).get();
 
-                expect(transportStub.get).to.have.been.calledWith('/api/posts', [["where", ["archived", 0]]]);
+                expect(connectionStub.read).to.have.been.calledWith(null, [["where", ["archived", 0]]]);
             });
 
             it('fetches results as hydrated models', () => {
@@ -187,9 +165,9 @@ describe('Builder', () => {
         it('can insert() to the endpoint', () => {
             let attributes = { name: 'Frank' };
 
-            builder.from('api/people').insert(attributes);
+            builder.insert(attributes);
 
-            expect(transportStub.post).to.have.been.calledWith('api/people', attributes);
+            expect(connectionStub.create).to.have.been.calledWith(attributes);
         });
 
         context('from an existing model', () => {
@@ -203,14 +181,14 @@ describe('Builder', () => {
             it('sends update data to a RESTful endpoint', () => {
                 builder.update({ name: 'Ann' });
 
-                expect(transportStub.put).to.have.been.calledWith('api/6');
+                expect(connectionStub.update).to.have.been.calledWith(6, { name: 'Ann' });
             });
 
             /** @test {Builder#delete} */
             it('sends a delete call to a RESTful endpoint', () => {
                 builder.delete();
 
-                expect(transportStub.delete).to.have.been.calledWith('api/6');
+                expect(connectionStub.delete).to.have.been.calledWith(6);
             });
         });
 
@@ -221,15 +199,16 @@ describe('Builder', () => {
                 person.getKey = sinon.stub().returns(undefined);
             });
 
-            it('sends update data to a faked RESTful URL', () => {
+            it('sends update data to an ID-less RESTful URL', () => {
                 builder.where('name', 'Francis').update({ active: 0 });
 
-                expect(transportStub.put).to.have.been.calledWith('api/*', { active: 0 }, builder.stack);
+                expect(connectionStub.update).to.have.been.calledWith(undefined, { active: 0 }, builder.stack);
             });
 
-            it('sends a DELETE request to a faked RESTful URL', () => {
+            it('sends a delete request to an ID-less RESTful URL', () => {
                 builder.where('name', 'Francis').delete();
-                expect(builder.transport.delete).to.have.been.calledWith('api/*', builder.stack);
+
+                expect(connectionStub.delete).to.have.been.calledWith(undefined, builder.stack);
             });
         });
     });

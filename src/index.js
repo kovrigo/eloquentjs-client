@@ -1,6 +1,6 @@
 import Builder from './Eloquent/Builder';
 import Model from './Eloquent/Model';
-import Transport from './Query/Transport';
+import Connection from './Connection/RestfulJsonConnection';
 import Container from './Container';
 
 let container = new Container();
@@ -100,11 +100,11 @@ Eloquent.boot = function () {
     Eloquent.booted = true;
 
     container.register('Builder', Builder);
-    container.register('Transport', Transport);
+    container.register('Connection', Connection);
     container.register('Model', Model);
 
     container.resolving('Builder', function (Builder, container) {
-        return new Builder(container.make('Transport'));
+        return new Builder(container.make('Connection'));
     });
 
 };
@@ -118,5 +118,5 @@ export {
     Container,
     Builder,
     Model,
-    Transport
+    Connection
 };

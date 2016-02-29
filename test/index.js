@@ -10,5 +10,4 @@ import './BuilderTest';
 import './ContainerTest';
 import './ModelTest';
 import './ModuleTest';
-import './TransportTest';
 import './Connection/RestfulJsonConnectionTest';
