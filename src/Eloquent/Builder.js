@@ -453,7 +453,7 @@ export default class Builder {
      * Set the relationships that should be eager loaded.
      *
      * @param {string[]} relations
-     * @returns {EloquentBuilder}
+     * @returns {Builder}
      */
     with(...relations) {
         this._call('with', relations);
