@@ -20,9 +20,6 @@ export default class Model {
             exists: {
                 value: false,
                 writable: true
-            },
-            definition: {
-                value: this.constructor
             }
         });
 
@@ -281,7 +278,7 @@ export default class Model {
      * @returns {string}
      */
     getKeyName() {
-        return this.definition.primaryKey || 'id';
+        return this.constructor.primaryKey || 'id';
     }
 
     /**
@@ -291,7 +288,7 @@ export default class Model {
      * @returns {Boolean}
      */
     isDate(column) {
-        return this.definition
+        return this.constructor
             .dates
             .concat('created_at', 'updated_at', 'deleted_at')
             .indexOf(column) > -1;
@@ -304,7 +301,7 @@ export default class Model {
      * @return {Boolean}
      */
     _isRelation(attribute) {
-        return Object.keys(this.definition.relations).indexOf(attribute) > -1;
+        return Object.keys(this.constructor.relations).indexOf(attribute) > -1;
     }
 
     /**
@@ -508,7 +505,7 @@ export default class Model {
      * @return {Model|Model[]}
      */
     _makeRelated(name, attributes) {
-        let related = new (app.make(this.definition.relations[name]));
+        let related = new (app.make(this.constructor.relations[name]));
 
         if (Array.isArray(attributes)) {
             return related.hydrate(attributes);
