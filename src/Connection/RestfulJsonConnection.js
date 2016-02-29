@@ -21,11 +21,11 @@ export default class RestfulJsonConnection extends Connection {
      * Run an INSERT query.
      *
      * @param  {Object} data
-     * @param  {array} query
+     * @param  {array} queryStack
      * @return {Promise}
      */
-    create(data, query) {
-        return this._fetch(query, 'post', data)
+    create(data, queryStack) {
+        return this._fetch(null, queryStack, 'post', data)
             .then(response => this.unwrap(response))
         ;
     }
@@ -33,11 +33,12 @@ export default class RestfulJsonConnection extends Connection {
     /**
      * Run a SELECT type query.
      *
-     * @param  {array} query
+     * @param  {number} id
+     * @param  {array} queryStack
      * @return {Promise}
      */
-    read(query) {
-        return this._fetch(query)
+    read(id, queryStack) {
+        return this._fetch(id, queryStack)
             .then(response => this.unwrap(response))
         ;
     }
@@ -45,12 +46,13 @@ export default class RestfulJsonConnection extends Connection {
     /**
      * Run an UPDATE query.
      *
+     * @param  {number} id
      * @param  {Object} data
-     * @param  {array} query
+     * @param  {array} queryStack
      * @return {Promise}
      */
-    update(data, query) {
-        return this._fetch(query, 'put', data)
+    update(id, data, queryStack) {
+        return this._fetch(id, queryStack, 'put', data)
             .then(response => this.unwrap(response))
         ;
     }
@@ -58,11 +60,12 @@ export default class RestfulJsonConnection extends Connection {
     /**
      * Run a DELETE query.
      *
-     * @param  {array} query
+     * @param  {number} id
+     * @param  {array} queryStack
      * @return {Promise}
      */
-    delete(query) {
-        return this._fetch(query, 'delete')
+    delete(id, queryStack) {
+        return this._fetch(id, queryStack, 'delete')
             .then(response => response.status === 200)
         ;
     }
@@ -70,13 +73,17 @@ export default class RestfulJsonConnection extends Connection {
     /**
      * Wrapper around window.fetch
      *
-     * @param  {array} query
-     * @param  {string} method
-     * @param  {Object} data
+     * @param  {number} [id]
+     * @param  {array} [queryStack]
+     * @param  {string} [method]
+     * @param  {Object} [data]
      * @return {Promise}
      */
-    _fetch(query, method, data) {
-        return fetch(this.url(query), this._makeInit(method, data));
+    _fetch(id, queryStack, method, data) {
+        return fetch(
+            this.url(id, queryStack),
+            this._makeInit(method, data)
+        );
     }
 
     /**
@@ -92,19 +99,26 @@ export default class RestfulJsonConnection extends Connection {
     /**
      * Get a URL to the endpoint.
      *
-     * @param  {array} query
+     * @param  {number} [id]
+     * @param  {array} [query]
      * @return {string}
      */
-    url(query) {
+    url(id, query) {
         if ( ! this.endpoint) {
             throw 'Endpoint must be set before using this connection';
         }
 
-        if (query && query.length) {
-            return `${this.endpoint}?query=${JSON.stringify(query)}`;
+        let url = this.endpoint;
+
+        if (id) {
+            url += '/'+id;
         }
 
-        return this.endpoint;
+        if (query && query.length) {
+            return `${url}?query=${JSON.stringify(query)}`;
+        }
+
+        return url;
     }
 
     /**

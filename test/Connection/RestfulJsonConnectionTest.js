@@ -27,11 +27,16 @@ describe('RestfulJsonConnection', () => {
 
         it('sends requests to the endpoint', () => {
             connection.read();
-            expect(fetchMock.calls()).not.to.be.empty;
+            expect(fetchMock.calls()[0][0]).to.equal(fixtures.endpoint);
+        });
+
+        it('can fetch by id', () => {
+            connection.read(5);
+            expect(fetchMock.calls()[0][0]).to.equal(`${fixtures.endpoint}/5`);
         });
 
         it('passes the current query in a JSON-encoded GET parameter', () => {
-            return connection.read(['stack']).then(function () {
+            return connection.read(null, ['stack']).then(function () {
                 expect(fetchMock.calls()[0][0]).to.equal(fixtures.endpoint+'?query='+JSON.stringify(['stack']));
             });
         });
@@ -67,16 +72,26 @@ describe('RestfulJsonConnection', () => {
 
         beforeEach(() => fetchMock.mock('^'+fixtures.endpoint, 'put', attributes));
 
-        it('makes a PUT request with a body of JSONified data', function () {
-            return connection.update(attributes).then(function () {
-                expect(fetchMock.calls().length).to.equal(1);
-                expect(fetchMock.calls()[0][1].body).to.equal(JSON.stringify(attributes));
-            });
+        it('can update by id', () => {
+            connection.update(5, { updated: true });
+            expect(fetchMock.calls()[0][0]).to.equal(`${fixtures.endpoint}/5`);
         });
 
         it('passes the current query in a JSON-encoded GET parameter', function() {
-            return connection.update(attributes, ['stack']).then(function () {
+            return connection.update(null, attributes, ['stack']).then(function () {
                 expect(fetchMock.calls()[0][0]).to.equal(fixtures.endpoint+'?query='+JSON.stringify(['stack']));
+            });
+        });
+
+        it('can combine update by ID and update from current query', function() {
+            connection.update(5, { updated: true }, ['stack']);
+            expect(fetchMock.calls()[0][0]).to.equal(fixtures.endpoint+'/5?query='+JSON.stringify(['stack']));
+        });
+
+        it('makes a PUT request with a body of JSONified data', function () {
+            return connection.update(null, attributes).then(function () {
+                expect(fetchMock.calls().length).to.equal(1);
+                expect(fetchMock.calls()[0][1].body).to.equal(JSON.stringify(attributes));
             });
         });
 
@@ -90,6 +105,11 @@ describe('RestfulJsonConnection', () => {
 
         beforeEach(() => fetchMock.mock('^'+fixtures.endpoint, 'delete', {}));
 
+        it('can delete by id', () => {
+            connection.delete(5);
+            expect(fetchMock.calls()[0][0]).to.equal(`${fixtures.endpoint}/5`);
+        });
+
         it('makes a DELETE request', function () {
             return connection.delete().then(function () {
                 expect(fetchMock.calls().length).to.equal(1);
@@ -97,7 +117,7 @@ describe('RestfulJsonConnection', () => {
         });
 
         it('passes the current query in a JSON-encoded GET parameter', function() {
-            return connection.delete(['stack']).then(function () {
+            return connection.delete(null, ['stack']).then(function () {
                 expect(fetchMock.calls()[0][0]).to.equal(fixtures.endpoint+'?query='+JSON.stringify(['stack']));
             });
         });
