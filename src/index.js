@@ -95,10 +95,22 @@ Eloquent.boot = function () {
             };
         }
 
+        // Create a factory function that sets up models
+        // according to the given modelProperties, boots,
+        // and creates the default connection.
         let modelFactory = function factory(BaseModel) {
             let NewModel = init(class extends BaseModel {});
+
             NewModel.prototype.bootIfNotBooted();
             NewModel.prototype.connection = new RestfulJsonConnection(NewModel.endpoint);
+
+            Object.keys(NewModel.relations).forEach(relationName => {
+                let relatedModel = NewModel.relations[relationName];
+                NewModel.relations[relationName] = function () {
+                    return Eloquent.make(relatedModel);
+                };
+            });
+
             return NewModel;
         };
 
