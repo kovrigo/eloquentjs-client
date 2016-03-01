@@ -21,10 +21,17 @@ export default class Model {
                 writable: true
             },
             exists: {
-                value: false,
                 writable: true
             }
         });
+
+        /**
+         * Flag denoting whether or not this model has been persisted.
+         *
+         * @protected
+         * @type {boolean}
+         */
+        this.exists = false;
 
         this.fill(attributes);
 
@@ -77,14 +84,39 @@ export default class Model {
      * @returns {void}
      */
     static _bootSelf() {
+        /**
+         * Flag denoting whether or not this model has already booted.
+         *
+         * @protected
+         * @type {boolean}
+         */
         this.booted = true;
 
+        /**
+         * The fields which are date columns.
+         *
+         * @protected
+         * @type {string[]}
+         */
         this.dates = (this.dates || []);
+
+        /**
+         * Map of relation names to relation-factories.
+         *
+         * @protected
+         * @type {{relationName: relationFactory}}
+         */
         this.relations = (this.relations || {});
 
-        if (this.scopes) {
-            this._bootScopes(this.scopes);
-        }
+        /**
+         * The names of the scope methods for this model.
+         *
+         * @protected
+         * @type {string[]}
+         */
+        this.scopes = this.scopes || [];
+
+        this._bootScopes(this.scopes);
     }
 
     /**
@@ -98,7 +130,12 @@ export default class Model {
      * @returns {void}
      */
     static _bootBaseModel() {
-        this.events = {}; // to store event listeners
+        /**
+         * The registered event handlers for all models.
+         *
+         * @type {{eventName: function[]}}
+         */
+        this.events = {};
 
         /*
          * Laravel uses the __call() and __callStatic() magic methods
@@ -190,6 +227,12 @@ export default class Model {
      * @return {void}
      */
     _syncOriginal() {
+        /**
+         * The original attributes of this instance.
+         *
+         * @protected
+         * @type {Object}
+         */
         this.original = this.getAttributes();
     }
 

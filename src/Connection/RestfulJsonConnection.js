@@ -1,19 +1,31 @@
 import Connection from './Connection';
 import 'isomorphic-fetch';
 
+/**
+ * RestfulJsonConnection
+ *
+ * This sends queries to a given endpoint over HTTP using
+ * RESTful conventions. If additional query methods are
+ * called, these are encoded in the (http) query string.
+ *
+ * The endpoint *must* be set before this connection is used.
+ */
 export default class RestfulJsonConnection extends Connection {
 
     /**
      * Create a new RestfulJsonConnection
      *
-     * This sends queries to a given endpoint over HTTP using
-     * RESTful conventions. If additional query methods are
-     * called, thse are encoded in the (http) query string.
-     *
      * @param  {string} [endpoint]
      */
     constructor(endpoint) {
         super();
+
+        /**
+         * The base URL for this connection.
+         *
+         * @protected
+         * @type {string}
+         */
         this.endpoint = endpoint;
     }
 
@@ -21,11 +33,10 @@ export default class RestfulJsonConnection extends Connection {
      * Run an INSERT query.
      *
      * @param  {Object} data
-     * @param  {array} queryStack
      * @return {Promise}
      */
-    create(data, queryStack) {
-        return this._fetch(null, queryStack, 'post', data)
+    create(data) {
+        return this._fetch(null, null, 'post', data)
             .then(response => this.unwrap(response))
         ;
     }
