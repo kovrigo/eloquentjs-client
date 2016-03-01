@@ -7,7 +7,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 import './BuilderTest';
-import './ContainerTest';
-import './ModelTest';
-import './ModuleTest';
 import './Connection/RestfulJsonConnectionTest';
+import './ModelTest';
+
+import './IntegrationTest';

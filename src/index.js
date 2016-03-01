@@ -1,9 +1,6 @@
 import Builder from './Eloquent/Builder';
 import Model from './Eloquent/Model';
-import Connection from './Connection/RestfulJsonConnection';
-import Container from './Container';
-
-let container = new Container();
+import RestfulJsonConnection from './Connection/RestfulJsonConnection';
 
 /**
  * Define or retrieve a model definition.
@@ -66,57 +63,82 @@ let Eloquent = function (name, definition) {
     if (definition) {
         Object.defineProperty(Eloquent, name, {
             get: function () {
-                return container.make(name);
+                return Eloquent.make(name);
             }
         });
 
-        let init = definition;
-
-        if (typeof definition !== 'function') {
-            init = function (BaseModel) {
-                return Object.assign(BaseModel, definition);
-            };
-        }
-
-        container.resolving(name, function (BaseModel) {
-            let Model = init(BaseModel);
-            Model.prototype.bootIfNotBooted();
-            return Model;
-        });
-
-        return container.register(name, class extends (container.get('Model')) {});
+        return Eloquent.register(name, definition);
     }
 
-    return container.make(name);
+    return Eloquent.make(name);
 };
 
 /**
- * Bootstrap our Eloquent implementation by registering some default bindings.
+ * Boot our Eloquent implementation.
  *
  * @returns {void}
  */
 Eloquent.boot = function () {
 
+    // Model needs to be able to make Builders
+    // @todo
+    // Conceptually might make more sense for the Model
+    // to be aware of its Connection and new up the Builder
+    // via an import, eliminating the need for this setup
+    // but introducing hard a Model -> Builder dependency...
+    Model._newBuilder = function (model) {
+        return new Builder(model ? new RestfulJsonConnection(model.constructor.endpoint) : null);
+    };
+
+    const modelsDefined = new Map();
+    const modelsMade = new Map();
+
+    Eloquent.register = function (modelName, modelProperties) {
+
+        let init = modelProperties;
+
+        // If properties are an object, convert to a callback that
+        // receives a base model and returns an extended child model
+        if (typeof modelProperties !== 'function') {
+            init = function (BaseModel) {
+                return Object.assign(BaseModel, modelProperties);
+            };
+        }
+
+        let modelFactory = function factory(BaseModel) {
+            let NewModel = init(class extends BaseModel {});
+            NewModel.prototype.bootIfNotBooted();
+            return NewModel;
+        };
+
+        return modelsDefined.set(modelName, modelFactory);
+    };
+
+    Eloquent.make = function (modelName) {
+
+        if ( ! modelsMade.has(modelName)) {
+
+            let factory = modelsDefined.get(modelName);
+
+            if (factory === null) {
+                throw new Error(`Model [${modelName}] not registered`);
+            }
+
+            modelsMade.set(modelName, factory(Model));
+        }
+
+        return modelsMade.get(modelName);
+    };
+
     Eloquent.booted = true;
-
-    container.register('Builder', Builder);
-    container.register('Connection', Connection);
-    container.register('Model', Model);
-
-    container.resolving('Builder', function (Builder, container) {
-        return new Builder(container.make('Connection'));
-    });
-
 };
 
 /*
  * Exports
  */
-export default Eloquent;
 export {
-    container as app,
-    Container,
+    Eloquent as default,
     Builder,
     Model,
-    Connection
+    RestfulJsonConnection
 };

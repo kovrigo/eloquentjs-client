@@ -321,7 +321,7 @@ export default class Model {
      * @returns {Builder}
      */
     newQuery() {
-        let builder = this.constructor._newBuilder();
+        let builder = this.constructor._newBuilder(this);
         builder._setModel(this);
         return builder;
     }
