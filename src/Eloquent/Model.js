@@ -354,7 +354,7 @@ export default class Model {
      * @returns {Model[]}
      */
     hydrate(items) {
-        return items.map((attributes) => this.newInstance(attributes, true));
+        return items.map(attributes => this.newInstance(attributes, true));
     }
 
     /**
