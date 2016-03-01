@@ -13,14 +13,20 @@ The `parsnick/eloquentjs` package for Laravel, available via Composer, includes 
 
 If you want to contribute, view the source, or customise the build, carry on.
 
+
 ## Documentation
 
-API documentation exists at [doc.esdoc.org/github.com/parsnick/eloquentjs-client](https://doc.esdoc.org/github.com/parsnick/eloquentjs-client/).
+API documentation exists at [doc.esdoc.org](https://doc.esdoc.org/github.com/parsnick/eloquentjs-client/).
 
 User-friendly documentation for usage of this library exists at [parsnick.github.io/eloquentjs/client](http://parsnick.github.io/eloquentjs/client/).
 
+
 ## Contributing
-All contributions welcome. For anything related to the companion PHP package, please use [`parsnick/eloquentjs`](https://github.com/parsnick/eloquentjs).
+
+As a new project, no formal contribution guide exists but feel free to open issues and pull requests.
+For anything related to the companion PHP package, please use [`parsnick/eloquentjs`](https://github.com/parsnick/eloquentjs).
+
 
 ## License
+
 MIT
