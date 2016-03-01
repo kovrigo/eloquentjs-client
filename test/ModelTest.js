@@ -18,7 +18,6 @@ describe('Model', () => {
     // Reset the stubs, data, Person class, and person instance
     beforeEach('modelSetup', () => {
         builderStub = new BuilderClass();
-        Model._newBuilder = () => builderStub;
 
         attributes = {
             name: 'Dave',
@@ -26,6 +25,7 @@ describe('Model', () => {
         };
 
         Person = class extends Model {};
+        Person.prototype.newQuery = sinon.stub().returns(builderStub);
         person = new Person(attributes);
         person.exists = true;
     });
@@ -111,26 +111,18 @@ describe('Model', () => {
         /** @test {Model#newQuery} */
         it('can be created from a model instance', () => {
             expect(person.newQuery()).to.equal(builderStub);
-            expect(builderStub._setModel).to.have.been.calledWith(person);
         });
 
         /** @test {Model#query} */
         it('can be created from a model class (statically)', () => {
             expect(Person.query()).to.equal(builderStub);
-            expect(builderStub._setModel.args[0][0]).to.be.an.instanceOf(Person);
         });
 
         it('has its methods proxied at boot', () => {
-            Object.getPrototypeOf(builderStub).anyBuilderMethod = sinon.stub().returnsThis();
-            Model._bootBaseModel();
-
-            // static access
-            expect(Person.anyBuilderMethod('test', 'args')).to.equal(builderStub);
-            expect(builderStub.anyBuilderMethod).to.have.been.calledWith('test', 'args');
-
-            // instance access
-            expect(person.anyBuilderMethod('test', 'args')).to.equal(builderStub);
-            expect(builderStub.anyBuilderMethod).to.have.been.calledWith('test', 'args');
+            class Rabbit extends Model {}
+            expect(Rabbit.find).not.to.be.a.function;
+            Rabbit.boot();
+            expect(Rabbit.find).to.be.a.function;
         });
     });
 
@@ -176,6 +168,7 @@ describe('Model', () => {
                 Dog = class extends Model {};
                 Dog.scopes = ['ofBreed'];
                 Dog.boot();
+                Dog.prototype.newQuery = sinon.stub().returns(builderStub);
                 builderStub.scope = sinon.stub().returnsThis();
             });
 

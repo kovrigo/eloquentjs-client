@@ -15,8 +15,9 @@ export default class Builder {
      * Create a new Builder instance.
      *
      * @param {Connection} connection
+     * @param {Model} [model]
      */
-    constructor(connection) {
+    constructor(connection, model) {
 
         /**
          * The connection class to send/receive the query/results.
@@ -41,6 +42,11 @@ export default class Builder {
          * @type {Model|null}
          */
         this._model = null;
+
+        //
+        // Allow model to be set at construction
+        //
+        if (model) this._setModel(model);
     }
 
     /**

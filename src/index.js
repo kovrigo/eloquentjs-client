@@ -80,16 +80,6 @@ let Eloquent = function (name, definition) {
  */
 Eloquent.boot = function () {
 
-    // Model needs to be able to make Builders
-    // @todo
-    // Conceptually might make more sense for the Model
-    // to be aware of its Connection and new up the Builder
-    // via an import, eliminating the need for this setup
-    // but introducing hard a Model -> Builder dependency...
-    Model._newBuilder = function (model) {
-        return new Builder(model ? new RestfulJsonConnection(model.constructor.endpoint) : null);
-    };
-
     const modelsDefined = new Map();
     const modelsMade = new Map();
 
@@ -108,6 +98,7 @@ Eloquent.boot = function () {
         let modelFactory = function factory(BaseModel) {
             let NewModel = init(class extends BaseModel {});
             NewModel.prototype.bootIfNotBooted();
+            NewModel.prototype.connection = new RestfulJsonConnection(NewModel.endpoint);
             return NewModel;
         };
 

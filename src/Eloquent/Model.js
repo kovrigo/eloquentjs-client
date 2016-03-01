@@ -1,3 +1,5 @@
+import Builder from './Builder';
+
 /**
  * Model class.
  *
@@ -110,7 +112,7 @@ export default class Model {
          * definition, adding at runtime reduces the footprint of our
          * library and should be easier to maintain.
          */
-        let builder = Object.getPrototypeOf(this._newBuilder());
+        let builder = Object.getPrototypeOf(new Builder);
 
         Object.getOwnPropertyNames(builder)
             .filter(function (name) {
@@ -126,6 +128,7 @@ export default class Model {
                     let builder = this.newQuery();
                     return builder[methodName].apply(builder, arguments);
                 });
+
                 // Add to the Model class directly to handle static calls
                 addMethod(Model, methodName, function () {
                     let builder = this.query();
@@ -148,14 +151,17 @@ export default class Model {
      */
     static _bootScopes(scopes) {
         scopes.forEach(function (scope) {
+
             // Add to the prototype for access by model instances
             addMethod(this, scope, function (...args) {
                 return this.newQuery().scope(scope, args);
             });
+
             // Add to the class for static access
             addMethod(this.constructor, scope, function (...args) {
                 return this.query().scope(scope, args);
             });
+
         }, this.prototype);
     }
 
@@ -321,9 +327,7 @@ export default class Model {
      * @returns {Builder}
      */
     newQuery() {
-        let builder = this.constructor._newBuilder(this);
-        builder._setModel(this);
-        return builder;
+        return new Builder(this.connection, this);
     }
 
     /**
@@ -337,15 +341,6 @@ export default class Model {
         let instance = new this.constructor(attributes);
         instance.exists = exists;
         return instance;
-    }
-
-    /**
-     * Create a new Builder instance.
-     *
-     * @return {Builder}
-     */
-    static _newBuilder() {
-        throw '_newBuilder not implemented';
     }
 
     /**
