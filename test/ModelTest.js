@@ -1,7 +1,6 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
 import Model from '../src/Eloquent/Model';
-import { app } from '../src/index';
 
 /** @test {Model} */
 describe('Model', () => {
@@ -19,7 +18,7 @@ describe('Model', () => {
     // Reset the stubs, data, Person class, and person instance
     beforeEach('modelSetup', () => {
         builderStub = new BuilderClass();
-        app.register('Builder', builderStub);
+        Model._newBuilder = () => builderStub;
 
         attributes = {
             name: 'Dave',
@@ -422,22 +421,19 @@ describe('Model', () => {
             let Profile;
 
             beforeEach('eagerLoadStubs', () => {
-                // Register a relation on the class
-                Person.relations = { comments: 'Comment', profile: 'Profile' };
 
-                // Create the related models in the container
-                Comment = class extends Model {};
-                Profile = class extends Model {};
-                app.register('Comment', Comment);
-                app.register('Profile', Profile);
-                app.resolving('Comment', Model => Model);
-                app.resolving('Profile', Model => Model);
+                Comment = class extends Model{};
+                Profile = class extends Model{};
+
+                // Register a relation on the class
+                Person.relations = {
+                    comments: () => Comment,
+                    profile: () => Profile
+                };
 
                 // Stub the query builder dependencies
                 builderStub.with = sinon.stub().returnsThis();
-                builderStub.getEndpoint = sinon.stub().returns('ENDPOINT');
-                builderStub.from = sinon.stub().returnsThis();
-                builderStub.getOne = sinon.stub().resolves({
+                builderStub.first = sinon.stub().resolves({
                     name: 'Dave',
                     comments: [
                         { body: 'Hello' }
@@ -452,7 +448,7 @@ describe('Model', () => {
                 person.load('comments');
 
                 expect(builderStub.with.args[0][0]).to.contain('comments');
-                expect(builderStub.getOne).to.have.been.called;
+                expect(builderStub.first).to.have.been.called;
             });
 
             it('resolves with the original model', () => {

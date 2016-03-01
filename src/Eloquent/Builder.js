@@ -526,7 +526,7 @@ export default class Builder {
      *
      * @param {string} scopeName
      * @param {*[]} scopeArgs
-     * @returns {EloquentBuilder}
+     * @returns {Builder}
      */
     scope(scopeName, scopeArgs) {
         let args = [scopeName];
@@ -567,20 +567,6 @@ export default class Builder {
     /**
      * Execute the query as an "update" statement.
      *
-     * There are two ways of running an update - on an existing
-     * model, e.g. `post.update()`, or via the query builder, e.g.
-     * `Post.where(...).update()`.
-     *
-     * The former is straightforward to implement. We can simply set
-     * up our RESTful controller in Laravel and make a PUT request to
-     * /resource/{id}. The latter is more complex because we don't have
-     * an ID.
-     *
-     * To support this, we use `*` in place of the ID to refer to all models.
-     * The various query clauses can then be sent to the server in
-     * just the same way as we would do for a GET, i.e. in URL's query
-     * string.
-     *
      * @param  {object} values
      * @return {Promise}
      */
@@ -590,8 +576,6 @@ export default class Builder {
 
     /**
      * Execute the query as a "delete" statement.
-     *
-     * See comments on update() - similar situation here.
      *
      * @return {Promise}
      */
@@ -623,7 +607,7 @@ export default class Builder {
         // underlying model instance to handle any scope calls.
         // Since we can't do that (yet), we'll settle for simply
         // copying the scope methods from the model at runtime.
-        (model.definition.scopes || []).forEach(name => {
+        (model.constructor.scopes || []).forEach(name => {
             this[name] = function (...args) {
                 this.scope(name, args);
                 return this;

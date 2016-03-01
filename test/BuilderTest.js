@@ -17,7 +17,7 @@ describe('Builder', () => {
         Person = class {
             constructor(attr) {
                 Object.assign(this, attr || {});
-                this.definition = { endpoint: 'api' };
+                this.constructor.endpoint = 'api';
             }
             hydrate(results) {
                 return results.map(result => new Person(result));
@@ -124,7 +124,7 @@ describe('Builder', () => {
 
         it('is the source of scope methods copied to the builder', () => {
             sinon.spy(builder, 'scope');
-            person.definition.scopes = ['ofBreed', 'living'];
+            person.constructor.scopes = ['ofBreed', 'living'];
             builder._setModel(person);
 
             builder.ofBreed('terrier').living();

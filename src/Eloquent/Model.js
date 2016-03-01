@@ -1,7 +1,8 @@
-import { app } from '../index';
-
 /**
- * Model class
+ * Model class.
+ *
+ * Conceptually equivalent to the Illuminate\Database\Eloquent\Model
+ * class in Laravel.
  */
 export default class Model {
 
@@ -344,7 +345,7 @@ export default class Model {
      * @return {Builder}
      */
     static _newBuilder() {
-        return app.make('Builder');
+        throw '_newBuilder not implemented';
     }
 
     /**
@@ -470,7 +471,7 @@ export default class Model {
     }
 
     /**
-     * Fetch all models from this endpoint.
+     * Fetch all models from this connection.
      *
      * @static
      * @param {string|string[]} [columns]
@@ -487,13 +488,18 @@ export default class Model {
      * @return {Promise}
      */
     load(...relations) {
-        let builder = this.newQuery();
-
-        return builder
-            .from(builder.getEndpoint(this.getKey()))
+        return this.newQuery()
             .with(relations)
-            .getOne()
-            .then(attributes => this.fill(Object.assign(attributes, this.getDirty())));
+            .first()
+            .then(attributes => {
+
+                // Fill in the relations, leave everything else in tact
+                relations.forEach(relatedName => {
+                    this.setAttribute(relatedName, attributes[relatedName]);
+                });
+
+                return this;
+            });
     }
 
     /**
@@ -505,7 +511,8 @@ export default class Model {
      * @return {Model|Model[]}
      */
     _makeRelated(name, attributes) {
-        let related = new (app.make(this.constructor.relations[name]));
+        let relatedClass = this.constructor.relations[name]();
+        let related = new relatedClass;
 
         if (Array.isArray(attributes)) {
             return related.hydrate(attributes);
