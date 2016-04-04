@@ -157,7 +157,7 @@ export default class Model {
                     name.charAt(0) !== '_'
                     && name !== 'constructor'
                     && typeof builder[name] === 'function'
-                )
+                );
             })
             .forEach(function (methodName) {
                 // Add to the prototype to handle instance calls
@@ -404,7 +404,7 @@ export default class Model {
      */
     static create(attributes = {}) {
         let instance = new this(attributes);
-        return instance.save().then(success => instance);
+        return instance.save().then(() => instance);
     }
 
     /**

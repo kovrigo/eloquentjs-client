@@ -1,6 +1,7 @@
 /**
- * Connection interface
+ * Connection interface.
  */
+/* eslint-disable */
 export default class Connection {
 
     /**

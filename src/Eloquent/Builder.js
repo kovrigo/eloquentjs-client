@@ -620,7 +620,7 @@ export default class Builder {
             };
         });
     }
-};
+}
 
 function unwrapFirst(results)
 {
