@@ -1,11 +1,11 @@
 import Builder from './Eloquent/Builder';
 import Container from './Container';
 import Model from './Eloquent/Model';
-import RestfulJsonConnection from './Connection/RestfulJsonConnection';
+import RestConnection from './Connection/RestConnection';
 
 export {
     Builder,
     Container,
     Model,
-    RestfulJsonConnection
+    RestConnection
 };

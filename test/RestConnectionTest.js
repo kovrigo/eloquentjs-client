@@ -1,8 +1,8 @@
 import {expect} from 'chai';
-import RestfulJsonConnection from '../../src/Connection/RestfulJsonConnection';
-import mock from '../helpers/mockServer';
+import RestConnection from '../src/Connection/RestConnection';
+import mock from './helpers/mockServer';
 
-describe('RestfulJsonConnection', () => {
+describe('RestConnection', () => {
 
     let connection;
     let fixtures = {
@@ -11,15 +11,15 @@ describe('RestfulJsonConnection', () => {
     };
 
     beforeEach('setup connection', () => {
-        connection = new RestfulJsonConnection(fixtures.endpoint);
+        connection = new RestConnection(fixtures.endpoint);
     });
 
     it('requires an endpoint (URL)', () => {
-        expect(() => new RestfulJsonConnection().url()).to.throw('Endpoint must be set');
+        expect(() => new RestConnection().url()).to.throw('Endpoint must be set');
         expect(() => connection.url()).not.to.throw();
     });
 
-    /** @test {RestfulJsonConnection#read} */
+    /** @test {RestConnection#read} */
     describe('read()', () => {
 
         it('sends GET requests to the endpoint', () => {
@@ -39,7 +39,7 @@ describe('RestfulJsonConnection', () => {
 
     });
 
-    /** @test {RestfulJsonConnection#create} */
+    /** @test {RestConnection#create} */
     describe('create()', function () {
 
         it('makes a POST request with a body of JSONified data', () => {
@@ -54,7 +54,7 @@ describe('RestfulJsonConnection', () => {
 
     });
 
-    /** @test {RestfulJsonConnection#update} */
+    /** @test {RestConnection#update} */
     describe('update()', function () {
 
         let attributes = { age: 50, color: 'green' };
@@ -78,13 +78,13 @@ describe('RestfulJsonConnection', () => {
             return expect(connection.update(null, attributes, ['stack'])).to.eventually.eql({ updated: 5 });
         });
 
-        xit('can combine update by ID and update from current query', function() {
-            connection.update(5, { updated: true }, ['stack']);
-            expect(fetchMock.calls()[0][0]).to.equal(fixtures.endpoint+'/5?query='+JSON.stringify(['stack']));
+        it('can combine update by ID and update from current query', function() {
+            mock({ updated: 5 }, 'test/posts/5?query=[%22stack%22]');
+            return expect(connection.update(5, attributes, ['stack'])).to.eventually.eql({ updated: 5 });
         });
     });
 
-    /** @test {RestfulJsonConnection#delete} */
+    /** @test {RestConnection#delete} */
     describe('delete()', function () {
 
         it('makes a DELETE request', function() {

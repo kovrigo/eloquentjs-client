@@ -1,4 +1,4 @@
-import RestfulJsonConnection from './Connection/RestfulJsonConnection';
+import RestConnection from './Connection/RestConnection';
 
 export default class Container {
 
@@ -71,7 +71,7 @@ export default class Container {
     }
 
     _createConnection(modelClass) {
-        modelClass.prototype.connection = new RestfulJsonConnection(modelClass.endpoint);
+        modelClass.prototype.connection = new RestConnection(modelClass.endpoint);
     }
 
     _createRelationFactories(modelClass) {

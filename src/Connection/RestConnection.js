@@ -1,7 +1,5 @@
-import Connection from './Connection';
-
 /**
- * RestfulJsonConnection
+ * RestConnection
  *
  * This sends queries to a given endpoint over HTTP using
  * RESTful conventions. If additional query methods are
@@ -9,16 +7,14 @@ import Connection from './Connection';
  *
  * The endpoint *must* be set before this connection is used.
  */
-export default class RestfulJsonConnection extends Connection {
+export default class RestConnection {
 
     /**
-     * Create a new RestfulJsonConnection
+     * Create a new RestConnection
      *
      * @param  {string} [endpoint]
      */
     constructor(endpoint) {
-        super();
-
         /**
          * The base URL for this connection.
          *

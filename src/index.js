@@ -1,7 +1,7 @@
 import Builder from './Eloquent/Builder';
 import Container from './Container';
 import Model from './Eloquent/Model';
-import RestfulJsonConnection from './Connection/RestfulJsonConnection';
+import RestConnection from './Connection/RestConnection';
 
 /**
  * Define or retrieve a model definition.
@@ -92,6 +92,6 @@ Eloquent.boot = function() {
 Eloquent.Builder = Builder;
 Eloquent.Container = Container;
 Eloquent.Model = Model;
-Eloquent.RestfulJsonConnection = RestfulJsonConnection;
+Eloquent.RestConnection = RestConnection;
 
 export default Eloquent;

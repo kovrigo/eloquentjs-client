@@ -22,12 +22,12 @@ function mock(respondWith, respondTo) {
             server.close();
 
             if ( ! requestMatches(req, respondTo)) {
-                throw `Request [${req.url}}] does not match pattern`;
+                throw `Request [${req.url}] does not match pattern`;
             }
         });
     });
 
-    server.listen(8000, '127.0.0.1');
+    server.listen(8008, '127.0.0.1');
 
     return server;
 }
@@ -45,6 +45,6 @@ function requestMatches(request, pattern) {
     return request.url === `/${pattern}`;
 }
 
-mock.url = (url) => 'http://127.0.0.1:8000/'+url;
+mock.url = (url) => 'http://127.0.0.1:8008/'+url;
 
-export default mock
+export default mock;
