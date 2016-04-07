@@ -1,4 +1,5 @@
 import Builder from './Eloquent/Builder';
+import Container from './Container';
 import Model from './Eloquent/Model';
 import RestfulJsonConnection from './Connection/RestfulJsonConnection';
 
@@ -41,20 +42,13 @@ import RestfulJsonConnection from './Connection/RestfulJsonConnection';
  *         console.log(results);
  *     });
  *
- * // ... or new up an instance ...
- * let post = new Post({
- *   author: 'David',
- *   body: 'Hello, my name is David.'
- * });
- * console.log(post.author); // David
- *
- * // ... or save a new record ...
+ * // ... or save a new record
  * Post.create({
  *   author: 'Derek',
- *   body: 'Hello David, my name is Derek.'
+ *   body: 'Hello!'
  * });
  */
-let Eloquent = function (name, definition) {
+const Eloquent = function(name, definition) {
 
     if ( ! Eloquent.booted) {
         Eloquent.boot();
@@ -78,59 +72,15 @@ let Eloquent = function (name, definition) {
  *
  * @returns {void}
  */
-Eloquent.boot = function () {
+Eloquent.boot = function() {
+    const container = new Container(Model);
 
-    const modelsDefined = new Map();
-    const modelsMade = new Map();
-
-    Eloquent.register = function (modelName, modelProperties) {
-
-        let init = modelProperties;
-
-        // If properties are an object, convert to a callback that
-        // receives a base model and returns an extended child model
-        if (typeof modelProperties !== 'function') {
-            init = function (BaseModel) {
-                return Object.assign(BaseModel, modelProperties);
-            };
-        }
-
-        // Create a factory function that sets up models
-        // according to the given modelProperties, boots,
-        // and creates the default connection.
-        let modelFactory = function factory(BaseModel) {
-            let NewModel = init(class extends BaseModel {});
-
-            NewModel.prototype.bootIfNotBooted();
-            NewModel.prototype.connection = new RestfulJsonConnection(NewModel.endpoint);
-
-            Object.keys(NewModel.relations).forEach(relationName => {
-                let relatedModel = NewModel.relations[relationName];
-                NewModel.relations[relationName] = function () {
-                    return Eloquent.make(relatedModel);
-                };
-            });
-
-            return NewModel;
-        };
-
-        return modelsDefined.set(modelName, modelFactory);
+    Eloquent.register = function (modelName, modelOptions, andMake) {
+        return container.register(modelName, modelOptions, andMake);
     };
 
     Eloquent.make = function (modelName) {
-
-        if ( ! modelsMade.has(modelName)) {
-
-            let factory = modelsDefined.get(modelName);
-
-            if (factory === null) {
-                throw new Error(`Model [${modelName}] not registered`);
-            }
-
-            modelsMade.set(modelName, factory(Model));
-        }
-
-        return modelsMade.get(modelName);
+        return container.make(modelName);
     };
 
     Eloquent.booted = true;
@@ -139,9 +89,9 @@ Eloquent.boot = function () {
 /*
  * Exports
  */
-export {
-    Eloquent as default,
-    Builder,
-    Model,
-    RestfulJsonConnection
-};
+Eloquent.Builder = Builder;
+Eloquent.Container = Container;
+Eloquent.Model = Model;
+Eloquent.RestfulJsonConnection = RestfulJsonConnection;
+
+export default Eloquent;

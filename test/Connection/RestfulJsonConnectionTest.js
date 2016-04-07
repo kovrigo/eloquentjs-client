@@ -1,59 +1,14 @@
 import {expect} from 'chai';
-import http from 'http';
-import 'isomorphic-fetch';
 import RestfulJsonConnection from '../../src/Connection/RestfulJsonConnection';
+import mock from '../helpers/mockServer';
 
 describe('RestfulJsonConnection', () => {
 
     let connection;
     let fixtures = {
         item: { id: 5, name: 'Test' },
-        endpoint: 'http://127.0.0.1:8000/test/posts'
+        endpoint: mock.url('test/posts')
     };
-
-    function mock(respondWith, respondTo) {
-
-        if (typeof respondWith !== 'string') {
-            respondWith = JSON.stringify(respondWith);
-        }
-
-        let server = http.createServer(function (req, res) {
-            let body = '';
-
-            req.on('data', function (data) {
-                body += data;
-                if (body.length > 1e6) req.connection.destroy();
-            });
-
-            req.on('end', function () {
-                req.body = body;
-
-                res.end(respondWith);
-                server.close();
-
-                if ( ! requestMatches(req, respondTo)) {
-                    throw `Request [${req.url}}] does not match pattern`;
-                }
-            });
-        });
-
-        server.listen(8000, '127.0.0.1');
-
-        return server;
-    }
-
-    function requestMatches(request, pattern) {
-        if ( ! pattern) return true;
-
-        if (typeof pattern === 'object') {
-            if (typeof pattern[request.method] === 'undefined') return false;
-            pattern = pattern[request.method];
-        }
-
-        if (typeof pattern === 'function') return pattern(request);
-
-        return request.url === `/${pattern}`;
-    }
 
     beforeEach('setup connection', () => {
         connection = new RestfulJsonConnection(fixtures.endpoint);

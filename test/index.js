@@ -9,5 +9,6 @@ chai.use(chaiAsPromised);
 import './BuilderTest';
 import './Connection/RestfulJsonConnectionTest';
 import './ModelTest';
+import './ContainerTest';
 
 import './IntegrationTest';
