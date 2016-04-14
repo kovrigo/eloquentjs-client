@@ -3,6 +3,8 @@ import Container from './Container';
 import Model from './Eloquent/Model';
 import RestConnection from './Connection/RestConnection';
 
+let container;
+
 /**
  * Define or retrieve a model definition.
  *
@@ -50,40 +52,21 @@ import RestConnection from './Connection/RestConnection';
  */
 const Eloquent = function(name, definition) {
 
-    if ( ! Eloquent.booted) {
-        Eloquent.boot();
+    if ( ! container) {
+        container = new Container(Model);
     }
 
     if (definition) {
         Object.defineProperty(Eloquent, name, {
             get: function () {
-                return Eloquent.make(name);
+                return container.make(name);
             }
         });
 
-        return Eloquent.register(name, definition);
+        return container.register(name, definition);
     }
 
-    return Eloquent.make(name);
-};
-
-/**
- * Boot our Eloquent implementation.
- *
- * @returns {void}
- */
-Eloquent.boot = function() {
-    const container = new Container(Model);
-
-    Eloquent.register = function (modelName, modelOptions, andMake) {
-        return container.register(modelName, modelOptions, andMake);
-    };
-
-    Eloquent.make = function (modelName) {
-        return container.make(modelName);
-    };
-
-    Eloquent.booted = true;
+    return container.make(name);
 };
 
 /*
