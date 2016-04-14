@@ -3,13 +3,11 @@
 [![Build Status](https://travis-ci.org/parsnick/eloquentjs-client.svg?branch=master)](https://travis-ci.org/parsnick/eloquentjs-client)
 [![Coverage Status](https://coveralls.io/repos/parsnick/eloquentjs-client/badge.svg?branch=master&service=github)](https://coveralls.io/github/parsnick/eloquentjs-client?branch=master)
 
-This repo contains the javascript source for the *EloquentJs* project.
-For more information about EloquentJs, see the [main eloquentjs repository](https://github.com/parsnick/eloquentjs) and/or [website](http://parsnick.github.io/eloquentjs).
+*EloquentJs* is a javascript implementation of the [Eloquent ORM](https://laravel.com/docs/5.1/eloquent) from Laravel. This repo holds the source for the client-side component which provides the familiar Eloquent API in the browser. For more about EloquentJs, check out [parsnick.github.io/eloquentjs](http://parsnick.github.io/eloquentjs).
 
+## Relation to other packages
 
-## About
-
-The `parsnick/eloquentjs` package for Laravel, available via Composer, includes a pre-built copy of this library. If you just want to use EloquentJs, head over to the [eloquentjs repo](https://github.com/parsnick/eloquentjs).
+The `parsnick/eloquentjs` package for Laravel, available via Composer, includes a pre-built copy of this library. If you just want to use EloquentJs, head over to the [eloquentjs repo](https://github.com/parsnick/eloquentjs) and follow the **Quickstart** guide.
 
 If you want to contribute, view the source, or customise the build, carry on.
 
@@ -20,6 +18,11 @@ API documentation exists at [doc.esdoc.org](https://doc.esdoc.org/github.com/par
 
 User-friendly documentation for usage of this library exists at [parsnick.github.io/eloquentjs/client](http://parsnick.github.io/eloquentjs/client/).
 
+
+## Changelog
+#### 2.0
+* replaced browserify with rollup for ES6 module consumers
+* simplified `Connection` interface
 
 ## Contributing
 

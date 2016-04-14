@@ -1,7 +1,7 @@
 {
-  "name": "laravel-eloquentjs",
-  "version": "1.1.0",
-  "description": "Javascript implementation of Laravel's Eloquent API",
+  "name": "eloquentjs",
+  "version": "2.0.0",
+  "description": "Brings the ORM from Laravel (Eloquent) to the browser",
   "main": "dist/eloquent.js",
   "jsnext:main": "dist/eloquent.es6.js",
   "scripts": {
@@ -13,8 +13,8 @@
     "prepublish": "npm run lint && npm run test && npm run build",
     "test": "mocha test/index.js --compilers js:babel-register",
     "test:watch": "mocha test/index.js -w --compilers js:babel-register",
-    "test:coverage": "istanbul cover _mocha -- -R spec test/index.js --compilers js:babel/register",
-    "test:travis": "istanbul cover _mocha --report lcovonly -- -R spec test/index.js --compilers js:babel/register && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "test:coverage": "istanbul cover _mocha -- -R spec test/index.js --compilers js:babel-register",
+    "test:travis": "istanbul cover _mocha --report lcovonly -- -R spec test/index.js --compilers js:babel-register && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
   },
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
     "orm",
     "activerecord"
   ],
-  "author": "Nick",
+  "author": "Nick <nick.dev@mailingaddress.org>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/parsnick/eloquentjs-client/issues"
@@ -39,10 +39,12 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
     "coveralls": "^2.11.9",
+    "eslint": "^2.7.0",
     "isomorphic-fetch": "^2.2.1",
-    "istanbul": "^0.4.2",
+    "istanbul": "^1.0.0-alpha.2",
     "mocha": "^2.4.5",
     "mocha-lcov-reporter": "^1.2.0",
+    "rollup": "^0.25.8",
     "rollup-plugin-babel": "^2.4.0",
     "sinon": "^1.17.3",
     "sinon-as-promised": "^4.0.0",
