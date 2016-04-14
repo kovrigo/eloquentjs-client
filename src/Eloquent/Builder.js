@@ -454,9 +454,10 @@ export default class Builder {
             return this.findMany(id, columns);
         }
 
-        return this.connection.read(id, this.stack)
-           .then(result => result ? this._model.newInstance(result) : null)
-        ;
+        return this
+            .connection
+            .read(id)
+            .then(result => result ? this._model.newInstance(result, true) : null);
     }
 
     /**
@@ -556,7 +557,9 @@ export default class Builder {
             this.select(columns);
         }
 
-        return this.connection.read(null, this.stack)
+        return this
+            .connection
+            .read(this.stack)
             .then(results => this._model.hydrate(results));
     }
 
@@ -577,7 +580,7 @@ export default class Builder {
      * @return {Promise}
      */
     update(values) {
-        return this.connection.update(this._model.getKey(), values, this.stack);
+        return this.connection.update(this.stack, values);
     }
 
     /**
@@ -586,7 +589,7 @@ export default class Builder {
      * @return {Promise}
      */
     delete() {
-        return this.connection.delete(this._model.getKey(), this.stack);
+        return this.connection.delete(this.stack);
     }
 
     /**

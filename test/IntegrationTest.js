@@ -34,7 +34,7 @@ describe('default export', () => {
         });
     });
 
-    context('related', () => {
+    context('relationships', () => {
         it('replaces named relations with factories', function () {
             Eloquent('Monkey', {
                 relations: {
@@ -86,6 +86,34 @@ describe('default export', () => {
             mock([{ id: 5, age: 52 }, { id: 6, age: 55 }]);
 
             return expect(Dog.lists('age')).to.eventually.eql([52, 55]);
+        });
+
+        it('updates a model', function() {
+            mock({ id: 1, name: 'Buster' }, { GET: 'api/dogs/1' });
+
+            return Dog.find(1).then(dog => {
+
+                mock({ name: 'Bob' }, { PUT: 'api/dogs/1' });
+
+                return dog.update({ name: 'Bob' }).then(success => {
+                    expect(dog.name).to.equal('Bob');
+                });
+            });
+        });
+
+        it('deletes a model', function() {
+            mock({ id: 1, name: 'Buster' }, { GET: 'api/dogs/1' });
+
+            return Dog.find(1).then(dog => {
+
+                mock({}, { DELETE: 'api/dogs/1' });
+
+                expect(dog.exists).to.be.true;
+
+                return dog.delete().then(success => {
+                    expect(dog.exists).to.be.false;
+                });
+            });
         });
     });
 });

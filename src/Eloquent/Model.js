@@ -462,8 +462,8 @@ export default class Model {
             return Promise.reject('updating.cancelled');
         }
 
-        return this.newQuery()
-            .update(this.getDirty())
+        return this.connection
+            .update(this.getKey(), this.getDirty())
             .then(response => {
                 this.triggerEvent('updated', false);
                 return response;
@@ -496,13 +496,13 @@ export default class Model {
             return Promise.reject('deleting.cancelled');
         }
 
-        return this.newQuery()
-            .where('id', this.getKey())
-            .delete()
+        return this.connection
+            .delete(this.getKey())
             .then(success => {
                 if (success) {
                     this.exists = false;
                 }
+
                 this.triggerEvent('deleted', false);
                 return success;
             });

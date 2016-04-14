@@ -19,34 +19,31 @@ export default class Connection {
     /**
      * Run a SELECT type query.
      *
-     * @param  {number} id
-     * @param  {array} queryStack
+     * @param  {number|Array} idOrQuery
      * @return {Promise}
      */
-    read(id, queryStack) {
+    read(idOrQuery) {
         throw "Not implemented";
     }
 
     /**
      * Run an UPDATE query.
      *
-     * @param  {number} id
+     * @param  {number|Array} idOrQuery
      * @param  {Object} data
-     * @param  {array} queryStack
      * @return {Promise}
      */
-    update(id, data, queryStack) {
+    update(idOrQuery, data) {
         throw "Not implemented";
     }
 
     /**
      * Run a DELETE query.
      *
-     * @param  {number} id
-     * @param  {array} queryStack
+     * @param  {number|Array} idOrQuery
      * @return {Promise}
      */
-    delete(id, queryStack) {
+    delete(idOrQuery) {
         throw "Not implemented";
     }
 }

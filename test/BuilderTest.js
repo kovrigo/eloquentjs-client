@@ -131,6 +131,10 @@ describe('Builder', () => {
 
             expect(builder.scope).to.have.been.calledTwice;
         });
+
+        it('hydrates data returned from a SELECT query', () => {
+            return expect(builder.get()).to.eventually.eql(dummyResult.map((row) => new Person(row)));
+        });
     });
 
     /** @test {Builder#scope} */
@@ -144,72 +148,32 @@ describe('Builder', () => {
         it('is chainable', () => {
             expect(builder.scope('ofType', ['admin'])).to.equal(builder);
         });
-
     });
 
     describe('query execution', () => {
         /** @test {Builder#get} */
-        context('for select statements', () => {
-
-            it('calls the transporter with the endpoint and query stack', function () {
-                builder.where('archived', 0).get();
-
-                expect(connectionStub.read).to.have.been.calledWith(null, [["where", ["archived", 0]]]);
-            });
-
-            it('fetches results as hydrated models', () => {
-                return expect(builder.get()).to.eventually.eql(dummyResult.map((row) => new Person(row)));
-            });
+        it('defers to connection.read for SELECT queries', function () {
+            builder.where('archived', 0).get();
+            expect(connectionStub.read).to.have.been.calledWith([["where", ["archived", 0]]]);
         });
 
-        it('can insert() to the endpoint', () => {
+        /** @test {Builder#insert} */
+        it('defers to connection.create for INSERT queries', () => {
             let attributes = { name: 'Frank' };
-
             builder.insert(attributes);
-
             expect(connectionStub.create).to.have.been.calledWith(attributes);
         });
 
-        context('from an existing model', () => {
-
-            beforeEach(() => {
-                person.exists = true;
-                person.getKey = sinon.stub().returns(6);
-            });
-
-            /** @test {Builder#update} */
-            it('sends update data to a RESTful endpoint', () => {
-                builder.update({ name: 'Ann' });
-
-                expect(connectionStub.update).to.have.been.calledWith(6, { name: 'Ann' });
-            });
-
-            /** @test {Builder#delete} */
-            it('sends a delete call to a RESTful endpoint', () => {
-                builder.delete();
-
-                expect(connectionStub.delete).to.have.been.calledWith(6);
-            });
+        /** @test {Builder#update} */
+        it('defers to connection.update for UPDATE queries', () => {
+            builder.where('name', 'Francis').update({ active: 0 });
+            expect(connectionStub.update).to.have.been.calledWith(builder.stack, { active: 0 });
         });
 
-        context('dynamic', () => {
-
-            beforeEach(() => {
-                person.exists = false;
-                person.getKey = sinon.stub().returns(undefined);
-            });
-
-            it('sends update data to an ID-less RESTful URL', () => {
-                builder.where('name', 'Francis').update({ active: 0 });
-
-                expect(connectionStub.update).to.have.been.calledWith(undefined, { active: 0 }, builder.stack);
-            });
-
-            it('sends a delete request to an ID-less RESTful URL', () => {
-                builder.where('name', 'Francis').delete();
-
-                expect(connectionStub.delete).to.have.been.calledWith(undefined, builder.stack);
-            });
+        /** @test {Builder#delete} */
+        it('defers to connection.update for DELETE queries', () => {
+            builder.where('name', 'Francis').delete();
+            expect(connectionStub.delete).to.have.been.calledWith(builder.stack);
         });
     });
 

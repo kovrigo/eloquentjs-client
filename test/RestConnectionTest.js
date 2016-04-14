@@ -20,7 +20,7 @@ describe('RestConnection', () => {
     });
 
     /** @test {RestConnection#read} */
-    describe('read()', () => {
+    describe('read', () => {
 
         it('sends GET requests to the endpoint', () => {
             mock({ status: "ok" }, 'test/posts');
@@ -34,7 +34,7 @@ describe('RestConnection', () => {
 
         it('passes the current query in a JSON-encoded query-string parameter', () => {
             mock([], 'test/posts?query=[%22stack%22]');
-            return expect(connection.read(null, ['stack'])).to.eventually.eql([]);
+            return expect(connection.read(['stack'])).to.eventually.eql([]);
         });
 
     });
@@ -65,7 +65,7 @@ describe('RestConnection', () => {
                 expect(request.body).to.eql(JSON.stringify(attributes));
                 return true;
             });
-            return expect(connection.update(null, attributes)).to.eventually.eql({ updated: true });
+            return expect(connection.update([], attributes)).to.eventually.eql({ updated: true });
         });
 
         it('can update by id', () => {
@@ -75,12 +75,7 @@ describe('RestConnection', () => {
 
         it('passes the current query in a JSON-encoded GET parameter', function() {
             mock({ updated: 5 }, 'test/posts?query=[%22stack%22]');
-            return expect(connection.update(null, attributes, ['stack'])).to.eventually.eql({ updated: 5 });
-        });
-
-        it('can combine update by ID and update from current query', function() {
-            mock({ updated: 5 }, 'test/posts/5?query=[%22stack%22]');
-            return expect(connection.update(5, attributes, ['stack'])).to.eventually.eql({ updated: 5 });
+            return expect(connection.update(['stack'], attributes)).to.eventually.eql({ updated: 5 });
         });
     });
 
@@ -99,7 +94,7 @@ describe('RestConnection', () => {
 
         it('passes the current query in a JSON-encoded GET parameter', function() {
             mock({ deleted: 5 }, 'test/posts?query=[%22stack%22]');
-            return expect(connection.delete(null, ['stack'])).to.eventually.equal(true);
+            return expect(connection.delete(['stack'])).to.eventually.equal(true);
         });
     });
 

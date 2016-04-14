@@ -31,49 +31,47 @@ export default class RestConnection {
      * @return {Promise}
      */
     create(data) {
-        return this._fetch(null, null, 'post', data)
-            .then(response => this.unwrap(response))
-        ;
+        return this
+            .sendRequest(null, 'post', data)
+            .then(response => this.unwrap(response));
     }
 
     /**
-     * Run a SELECT type query.
+     * Run a SELECT query.
      *
-     * @param  {number} id
-     * @param  {array} queryStack
+     * @param  {number|Array} idOrQuery
      * @return {Promise}
      */
-    read(id, queryStack) {
-        return this._fetch(id, queryStack)
-            .then(response => this.unwrap(response))
-        ;
+    read(idOrQuery) {
+        return this
+            .sendRequest(idOrQuery)
+            .then(response => this.unwrap(response));
     }
 
     /**
      * Run an UPDATE query.
      *
-     * @param  {number} id
+     * @param  {number|Array} idOrQuery
      * @param  {Object} data
-     * @param  {array} queryStack
      * @return {Promise}
      */
-    update(id, data, queryStack) {
-        return this._fetch(id, queryStack, 'put', data)
-            .then(response => this.unwrap(response))
-        ;
+    update(idOrQuery, data) {
+        return this
+            .sendRequest(idOrQuery, 'put', data)
+            .then(response => this.unwrap(response));
     }
+
 
     /**
      * Run a DELETE query.
      *
-     * @param  {number} id
-     * @param  {array} queryStack
+     * @param  {number|Array} idOrQuery
      * @return {Promise}
      */
-    delete(id, queryStack) {
-        return this._fetch(id, queryStack, 'delete')
-            .then(response => response.status === 200)
-        ;
+    delete(idOrQuery) {
+        return this
+            .sendRequest(idOrQuery, 'delete')
+            .then(response => response.status === 200);
     }
 
     /**
@@ -90,6 +88,72 @@ export default class RestConnection {
             this.url(id, queryStack),
             this._makeInit(method, data)
         );
+    }
+
+    /**
+     * Send an HTTP request and return a Promise.
+     *
+     * @param  {string|number|Array} [urlSuffix]
+     * @param  {string} [method]
+     * @param  {Object} [body]
+     * @return {Promise}
+     */
+    sendRequest(urlSuffix, method, body) {
+        return fetch(this.buildUrl(urlSuffix), this.buildOptions(method, body));
+    }
+
+    /**
+     * Get endpoint URL with the entity ID or query data appended.
+     *
+     * @param  {string|number|array} suffix
+     * @return {string}
+     */
+    buildUrl(suffix) {
+        if ( ! this.endpoint) {
+            throw 'Endpoint must be set before using this connection';
+        }
+
+        let url = this.endpoint;
+
+        if (Array.isArray(suffix)) {
+            if (suffix.length) {
+                url += '?query='+JSON.stringify(suffix);
+            }
+        } else if (suffix) {
+            url += '/'+suffix;
+        }
+
+        return url;
+    }
+
+    /**
+     * Get an options hash for the fetch `init` parameter.
+     *
+     * @see  https://developer.mozilla.org/en-US/docs/Web/API/Request/Request#Parameters
+     * @param  {string} [method]
+     * @param  {Object} [data]
+     * @param  {Object} [options]
+     * @return {Object}
+     */
+    buildOptions(method, body, options) {
+        let defaults = {
+            credentials: 'same-origin', // to send our session cookie
+            headers: {
+                'Accept': 'application/json',
+                'X-XSRF-TOKEN': getCsrfToken()
+            }
+        };
+
+        if (method) {
+            defaults.method = method;
+        }
+
+        if (body) {
+            defaults.headers['Content-Type'] = 'application/json';
+            defaults.body = JSON.stringify(body);
+        }
+
+        return Object.assign(defaults, options || {});
     }
 
     /**

@@ -1,6 +1,8 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
 import Model from '../src/Eloquent/Model';
+import Builder from '../src/Eloquent/Builder';
+import RestConnection from '../src/Connection/RestConnection';
 
 /** @test {Model} */
 describe('Model', () => {
@@ -8,24 +10,18 @@ describe('Model', () => {
     let Person; // the "class"
     let person; // an instance of Person
     let attributes; // dummy data for the person
-    let builderStub; // stub for common dependency
-    let BuilderClass = class {
-        _setModel() {
-            return sinon.stub();
-        }
-    };
+    let connection;
 
-    // Reset the stubs, data, Person class, and person instance
-    beforeEach('modelSetup', () => {
-        builderStub = new BuilderClass();
-
+    beforeEach('setup model and connection', () => {
         attributes = {
             name: 'Dave',
             email: 'dave@example.com'
         };
+        connection = new RestConnection('api/people');
 
         Person = class extends Model {};
-        Person.prototype.newQuery = sinon.stub().returns(builderStub);
+        Person.prototype.connection = connection;
+
         person = new Person(attributes);
         person.exists = true;
     });
@@ -101,21 +97,14 @@ describe('Model', () => {
 
     describe('query builder', () => {
 
-        let setModelStub;
-
-        beforeEach('stubSetModel', () => {
-            setModelStub = sinon.stub();
-            Object.getPrototypeOf(builderStub)._setModel = setModelStub;
-        });
-
         /** @test {Model#newQuery} */
         it('can be created from a model instance', () => {
-            expect(person.newQuery()).to.equal(builderStub);
+            expect(person.newQuery()).to.be.an.instanceOf(Builder);
         });
 
         /** @test {Model#query} */
         it('can be created from a model class (statically)', () => {
-            expect(Person.query()).to.equal(builderStub);
+            expect(Person.query()).to.be.an.instanceOf(Builder);
         });
 
         it('has its methods proxied at boot', () => {
@@ -143,11 +132,9 @@ describe('Model', () => {
     });
 
     /** @test {Model#all} */
-    describe('all()', () => {
-        it('fetches all models', () => {
-            builderStub.get = sinon.stub().returns('ALL');
-            expect(Person.all()).to.equal('ALL');
-        });
+    it('can fetch all models', () => {
+        sinon.stub(connection, 'read').resolves([{ name: 'Alice' }]);
+        return expect(Person.all()).to.eventually.eql([ new Person({ name: 'Alice'} )]);
     });
 
     /** @test {Model#boot} */
@@ -164,12 +151,13 @@ describe('Model', () => {
 
         describe('scoped method', () => {
 
+            let builder = new Builder;
+
             beforeEach('setupModelWithScopes', () => {
                 Dog = class extends Model {};
                 Dog.scopes = ['ofBreed'];
                 Dog.boot();
-                Dog.prototype.newQuery = sinon.stub().returns(builderStub);
-                builderStub.scope = sinon.stub().returnsThis();
+                Dog.prototype.newQuery = sinon.stub().returns(builder);
             });
 
             it('is added to the class', () => {
@@ -182,12 +170,13 @@ describe('Model', () => {
             });
 
             it('returns a builder object', () => {
-                expect(Dog.ofBreed('terrier')).to.equal(builderStub);
+                expect(Dog.ofBreed('terrier')).to.be.an.instanceOf(Builder);
             });
 
             it('calls scope() on the builder', () => {
+                sinon.stub(builder, 'scope');
                 Dog.ofBreed('terrier');
-                expect(builderStub.scope).to.have.been.calledWith('ofBreed', ['terrier']);
+                expect(builder.scope).to.have.been.calledWith('ofBreed', ['terrier']);
             });
         });
     });
@@ -210,33 +199,33 @@ describe('Model', () => {
         context('on a non-existent model', () => {
 
             beforeEach('stubInsert', () => {
-                builderStub.insert = sinon.stub().resolves(attributes);
+                sinon.stub(connection, 'create').resolves(attributes);
                 person.exists = false;
             });
 
             it('calls insert() on the query builder', () => {
                 person.save();
-                expect(builderStub.insert).to.have.been.calledWith(person.getAttributes());
+                expect(connection.create).to.have.been.calledWith(person.getAttributes());
             });
 
-            it('updates the instance with the new attributes from the server', () => {
-                builderStub.insert.resolves(Object.assign(attributes, { id: 2 }));
+            it('updates the instance to include new attributes from the server', () => {
+                connection.create.resolves(Object.assign(attributes, { id: 2 }));
                 return person.save().then(() => expect(person.id).to.equal(2));
             });
         });
 
         context('on an existing model', () => {
 
-            beforeEach('stubUpdate', () => {
-                builderStub.update = sinon.stub().resolves({ serverSays: 'Hello' });
+            beforeEach('stub connection.update', () => {
+                sinon.stub(connection, 'update').resolves({ serverSays: 'Hello' });
             });
 
-            it('calls update() on the query builder', () => {
+            it('calls update() on the connection', () => {
                 person.save();
-                expect(builderStub.update).to.have.been.calledWith(person.getDirty());
+                expect(connection.update).to.have.been.calledWith(person.getKey(), person.getDirty());
             });
 
-            it('updates the instance with the new attributes from the server', () => {
+            it('updates the instance to include new attributes from the server', () => {
                 return person.save().then(() => expect(person.serverSays).to.equal('Hello'));
             });
         });
@@ -254,14 +243,12 @@ describe('Model', () => {
 
     /** @test {Model#delete} */
     it('deletes the model', () => {
+        sinon.stub(connection, 'delete').resolves(true);
         person.id = 5;
-        builderStub.where = sinon.stub().returnsThis();
-        builderStub.delete = sinon.stub().resolves(true);
 
         return person.delete().then(response => {
             expect(person.exists).to.equal(false);
-            expect(builderStub.where).to.have.been.calledWith('id', 5);
-            expect(builderStub.delete).to.have.been.called;
+            expect(connection.delete).to.have.been.calledWith(5);
         });
     });
 
@@ -280,11 +267,11 @@ describe('Model', () => {
             });
         })
 
-        beforeEach('stubBuilderOperations', () => {
+        beforeEach('stub connection', () => {
             observer = sinon.stub();
-            builderStub.insert = sinon.stub().resolves();
-            builderStub.update = sinon.stub().resolves();
-            builderStub.delete = sinon.stub().resolves();
+            sinon.stub(connection, 'create').resolves();
+            sinon.stub(connection, 'update').resolves();
+            sinon.stub(connection, 'delete').resolves();
         });
 
         it('can have any number of observers', () => {
@@ -315,7 +302,7 @@ describe('Model', () => {
 
                 let request = Person.create({ name: 'Dave' });
 
-                expect(builderStub.insert).not.to.have.been.called;
+                expect(connection.create).not.to.have.been.called;
                 return expect(request).to.eventually.be.rejectedWith('cancelled');
             });
 
@@ -383,8 +370,6 @@ describe('Model', () => {
 
         context('when a model is deleted', () => {
 
-            beforeEach('stubWhereForDeleteClause', () => builderStub.where = sinon.stub().returnsThis());
-
             it('fires the deleting event beforehand', () => {
                 Person.deleting(observer);
 
@@ -396,7 +381,7 @@ describe('Model', () => {
 
             it('fires the deleted event afterwards', () => {
                 Person.deleted(observer);
-                builderStub.delete.resolves(true);
+                connection.delete.resolves(true);
 
                 return person.delete().then(success => {
                     expect(observer).to.have.been.called;
@@ -413,7 +398,7 @@ describe('Model', () => {
             let Comment;
             let Profile;
 
-            beforeEach('eagerLoadStubs', () => {
+            beforeEach('stub related models', () => {
 
                 Comment = class extends Model{};
                 Profile = class extends Model{};
@@ -424,24 +409,18 @@ describe('Model', () => {
                     profile: () => Profile
                 };
 
-                // Stub the query builder dependencies
-                builderStub.with = sinon.stub().returnsThis();
-                builderStub.first = sinon.stub().resolves({
-                    name: 'Dave',
-                    comments: [
-                        { body: 'Hello' }
-                    ],
-                    profile: {
-                        website: 'URL'
+                // Mock response
+                sinon.stub(connection, 'read').resolves([
+                    {
+                        name: 'Dave',
+                        comments: [
+                            { body: 'Hello' }
+                        ],
+                        profile: {
+                            website: 'URL'
+                        }
                     }
-                });
-            });
-
-            it('uses with() to fetch the model and the requested relations', () => {
-                person.load('comments');
-
-                expect(builderStub.with.args[0][0]).to.contain('comments');
-                expect(builderStub.first).to.have.been.called;
+                ]);
             });
 
             it('resolves with the original model', () => {
