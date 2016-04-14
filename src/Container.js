@@ -61,7 +61,6 @@ export default class Container {
 
         this._boot(subclass);
         this._createConnection(subclass);
-        this._createRelationFactories(subclass);
 
         return subclass;
     }
@@ -72,12 +71,5 @@ export default class Container {
 
     _createConnection(modelClass) {
         modelClass.prototype.connection = new RestConnection(modelClass.endpoint);
-    }
-
-    _createRelationFactories(modelClass) {
-        Object.keys(modelClass.relations || {}).forEach(relationName => {
-            let relatedModel = modelClass.relations[relationName];
-            modelClass.relations[relationName] = () => this.make(relatedModel);
-        });
     }
 }

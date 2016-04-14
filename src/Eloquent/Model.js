@@ -16,6 +16,7 @@ export default class Model {
     constructor(attributes = {}) {
         this.bootIfNotBooted();
 
+        // Create non-enumerable properties for metadata
         Object.defineProperties(this, {
             original: {
                 writable: true
@@ -56,11 +57,6 @@ export default class Model {
      * until it's actually needed. This means we can load a single
      * build of EloquentJs on every page and have access to all our
      * models, with minimal impact on performance.
-     *
-     * There's actually multiple layers to booting, each intending to
-     * add just the functionality required at the time. Here we've separated
-     * booting the base Model class (i.e. this class) and booting the
-     * various child classes.
      *
      * @returns {void}
      */
@@ -549,7 +545,7 @@ export default class Model {
      * @return {Model|Model[]}
      */
     _makeRelated(name, attributes) {
-        let relatedClass = this.constructor.relations[name]();
+        let relatedClass = this._getRelatedClass(this.constructor.relations[name]);
         let related = new relatedClass;
 
         if (Array.isArray(attributes)) {
@@ -559,6 +555,27 @@ export default class Model {
         return related.fill(attributes);
     }
 
+    /**
+     * Get a related model class.
+     *
+     * This method will be replaced by Model.setContainer during normal usage.
+     *
+     * @param  {string} name
+     * @return {Model}
+     */
+    _getRelatedClass(name) {
+        throw new Error(`Cannot make related class [${name}]`);
+    }
+
+    /**
+     * Set the container instance to use for making related models.
+     *
+     * @param {Container} container
+     * @return {void}
+     */
+    static setContainer(container) {
+        this.prototype._getRelatedClass = (name) => container.make(name);
+    }
 
     /**
      * Register a 'creating' event handler.

@@ -34,19 +34,6 @@ describe('default export', () => {
         });
     });
 
-    context('relationships', () => {
-        it('replaces named relations with factories', function () {
-            Eloquent('Monkey', {
-                relations: {
-                    posts: 'Post',
-                    comments: 'Comment'
-                }
-            });
-            expect(Eloquent.Monkey.relations.posts()).to.equal(Eloquent.Post);
-            expect(Eloquent.Monkey.relations.comments()).to.equal(Eloquent.Comment);
-        });
-    });
-
     context('api', () => {
         let Dog;
 

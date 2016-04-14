@@ -54,6 +54,7 @@ const Eloquent = function(name, definition) {
 
     if ( ! container) {
         container = new Container(Model);
+        Model.setContainer(container);
     }
 
     if (definition) {

@@ -400,13 +400,19 @@ describe('Model', () => {
 
             beforeEach('stub related models', () => {
 
-                Comment = class extends Model{};
-                Profile = class extends Model{};
+                Comment = class extends Model {};
+                Profile = class extends Model {};
 
-                // Register a relation on the class
                 Person.relations = {
-                    comments: () => Comment,
-                    profile: () => Profile
+                    comments: 'Comment',
+                    profile: 'Profile'
+                };
+
+                // This would usually be handled by the container:
+                Person.prototype._getRelatedClass = function (name) {
+                    if (name == 'Comment') return Comment;
+                    if (name == 'Profile') return Profile;
+                    throw new Error('Cannot make '+name);
                 };
 
                 // Mock response
