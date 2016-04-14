@@ -1,4 +1,5 @@
 import Builder from './Builder';
+import RestConnection from '../Connection/RestConnection';
 
 /**
  * Model class.
@@ -111,6 +112,10 @@ export default class Model {
          * @type {string[]}
          */
         this.scopes = this.scopes || [];
+
+        // Create connection if one doesn't already exist
+        if ( ! this.prototype.connection)
+            this.prototype.connection = new RestConnection(this.endpoint);
 
         this._bootScopes(this.scopes);
     }

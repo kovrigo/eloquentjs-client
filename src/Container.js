@@ -1,5 +1,3 @@
-import RestConnection from './Connection/RestConnection';
-
 export default class Container {
 
     /**
@@ -37,7 +35,7 @@ export default class Container {
     }
 
     /**
-     * Make a model class.
+     * Make and initialise a model class.
      *
      * @param  {string} modelName
      * @return {Model}
@@ -56,20 +54,18 @@ export default class Container {
         return customiser._made;
     }
 
+    /**
+     * Set up a subclass extending the base Model.
+     *
+     * @param  {[type]} baseClass  [description]
+     * @param  {[type]} customiser [description]
+     * @return {[type]}            [description]
+     */
     _makeClass(baseClass, customiser) {
         let subclass = customiser(class extends baseClass {});
 
-        this._boot(subclass);
-        this._createConnection(subclass);
+        subclass.prototype.bootIfNotBooted();
 
         return subclass;
-    }
-
-    _boot(modelClass) {
-        modelClass.prototype.bootIfNotBooted();
-    }
-
-    _createConnection(modelClass) {
-        modelClass.prototype.connection = new RestConnection(modelClass.endpoint);
     }
 }
