@@ -305,7 +305,10 @@ export default class Model {
             if (
                 typeof this.original[prop] !== 'undefined'
                 &&
-                this.original[prop].valueOf() === attributes[prop].valueOf()
+                (
+                    (this.original[prop] === null && attributes[prop] === null) 
+                    || (this.original[prop] !== null && attributes[prop] !== null && this.original[prop].valueOf() === attributes[prop].valueOf())
+                )
             ) {
                 delete attributes[prop];
             }
