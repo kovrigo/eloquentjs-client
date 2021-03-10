@@ -8,7 +8,8 @@
  * The endpoint *must* be set before this connection is used.
  */
 
-const fetch = require("node-fetch");
+//const fetch = require("node-fetch");
+const fetch = require("cross-fetch");
 
 export default class RestConnection {
 
