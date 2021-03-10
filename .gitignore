@@ -31,5 +31,4 @@ node_modules
 
 # Built files
 docs
-dist
 .DS_Store
