@@ -7,6 +7,9 @@
  *
  * The endpoint *must* be set before this connection is used.
  */
+
+const fetch = require("node-fetch");
+
 export default class RestConnection {
 
     /**
