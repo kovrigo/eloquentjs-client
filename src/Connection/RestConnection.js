@@ -141,11 +141,12 @@ export default class RestConnection {
      */
     buildOptions(method, body, options) {
         let token = '9ovrjgnmzSQtAsFFO8RfbOtz0UDRJP4u5IWKsePRBQnf5aPEKRdO9c5DrZ9M';
+        var bearer = 'Bearer ' + token;
         let defaults = {
             credentials: 'same-origin', // to send our session cookie
             headers: {
                 'Accept': 'application/json',
-                'Authorization': `Bearer + ${token}`,
+                'Authorization': bearer,
                 'X-XSRF-TOKEN': getCsrfToken()
             }
         };
