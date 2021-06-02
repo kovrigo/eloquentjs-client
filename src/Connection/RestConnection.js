@@ -140,7 +140,6 @@ export default class RestConnection {
      * @return {Object}
      */
     buildOptions(method, body, options) {
-        //let token = '9ovrjgnmzSQtAsFFO8RfbOtz0UDRJP4u5IWKsePRBQnf5aPEKRdO9c5DrZ9M';
         let token = getBearerToken();
         var bearer = 'Bearer ' + token;
         let defaults = {
@@ -242,6 +241,8 @@ function getBearerToken()
 {
     if (typeof document === 'undefined') {
         return global.token;
-    };
+    } else {
+        return window.token;
+    }
     return;
 }
